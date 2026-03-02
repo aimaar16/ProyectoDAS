@@ -31,6 +31,17 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:menu="@menu/menu_drawer" />
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/menu_drawer"
+
+        app:itemIconTint="@color/drawer_item_color"
+        app:itemTextColor="@color/drawer_item_color"
+        app:itemBackground="@drawable/drawer_item_background"
+        app:itemShapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.MediumComponent"
+        app:itemHorizontalPadding="16dp"
+        app:itemIconPadding="24dp"
+        android:background="#FFFFFF" />
+
+
 
 </androidx.drawerlayout.widget.DrawerLayout>

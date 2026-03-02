@@ -3,12 +3,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:showIn="navigation_view">
-    <item android:title="Primer menú">
+    <item android:title="Principal">
         <menu>
             <item
-                android:id="@+id/microfono"
-                android:icon="@android:drawable/ic_btn_speak_now"
-                android:title="Micrófono" />
+                android:id="@+id/fragment_armario"
+                android:icon="@android:drawable/ic_menu_gallery"
+                android:title="Armario">
+            </item>
+            <item
+                android:id="@+id/fragment_outfit"
+                android:icon="@android:drawable/ic_menu_gallery"
+                android:title="Outfit">
+            </item>
+        </menu>
+    </item>
+    <item android:title="Opciones">
+        <menu>
+            <item
+                android:id="@+id/fragment_favoritos"
+                android:icon="@android:drawable/btn_star_big_on"
+                android:title="Ropa Favorita" />
+
+            <item
+                android:id="@+id/fragment_añadirRopa"
+                android:icon="@android:drawable/btn_plus"
+                android:title="Añadir Ropa" />
         </menu>
     </item>
 </menu>
