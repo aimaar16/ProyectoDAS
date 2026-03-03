@@ -1,6 +1,7 @@
 package com.das.proyectodas;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
@@ -19,7 +20,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
-
+    private long tiempoClick =0; //Contador para ver cuanto tiempo hay entre clicks para salir
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,7 +69,16 @@ public class MainActivity extends AppCompatActivity {
                     elmenudesplegable.closeDrawer(GravityCompat.START);
                 }
                 else {
-                    finish();
+                    if (tiempoClick+1500 > System.currentTimeMillis()) {
+                        finish();
+                    }else{
+                        Toast.makeText(getApplicationContext(),"Pulsa otra vez para salir",Toast.LENGTH_SHORT).show();
+                        tiempoClick = System.currentTimeMillis();
+                    }
+
+
+
+
                 }
             }
         });
