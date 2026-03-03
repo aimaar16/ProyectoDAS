@@ -7,12 +7,12 @@
         <menu>
             <item
                 android:id="@+id/fragment_armario"
-                android:icon="@android:drawable/ic_menu_gallery"
+                android:icon="@drawable/ic_armario"
                 android:title="Armario">
             </item>
             <item
                 android:id="@+id/fragment_outfit"
-                android:icon="@android:drawable/ic_menu_gallery"
+                android:icon="@drawable/ic_outfit"
                 android:title="Outfit">
             </item>
         </menu>
@@ -21,12 +21,12 @@
         <menu>
             <item
                 android:id="@+id/fragment_favoritos"
-                android:icon="@android:drawable/btn_star_big_on"
+                android:icon="@drawable/ic_favorite"
                 android:title="Ropa Favorita" />
 
             <item
                 android:id="@+id/fragment_añadirRopa"
-                android:icon="@android:drawable/btn_plus"
+                android:icon="@drawable/ic_add"
                 android:title="Añadir Ropa" />
         </menu>
     </item>
