@@ -12,6 +12,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/barra"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:background="#6200EE"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="Mi Armario DAS"/>
+
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
@@ -19,10 +29,10 @@
             android:layout_height="0dp"
             app:defaultNavHost="true"
             app:navGraph="@navigation/nav"
+            app:layout_constraintTop_toBottomOf="@id/barra"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -33,15 +43,9 @@
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/menu_drawer"
-
         app:itemIconTint="@color/drawer_item_color"
         app:itemTextColor="@color/drawer_item_color"
         app:itemBackground="@drawable/drawer_item_background"
-        app:itemShapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.MediumComponent"
-        app:itemHorizontalPadding="16dp"
-        app:itemIconPadding="24dp"
         android:background="#FFFFFF" />
-
-
 
 </androidx.drawerlayout.widget.DrawerLayout>
