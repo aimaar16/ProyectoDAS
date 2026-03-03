@@ -25,8 +25,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="8dp"
+            android:gravity="center"
+            android:textAlignment="center"
             android:text="Nombre de la prenda"
             android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnFavorito"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_favorite"
+            android:contentDescription="Añadir a favoritos" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

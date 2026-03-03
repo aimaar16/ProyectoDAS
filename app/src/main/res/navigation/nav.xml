@@ -17,4 +17,10 @@
         android:label="Inicio"
         tools:layout="@layout/fragment_inicio" />
 
+    <fragment
+        android:id="@+id/fragment_favoritos"
+        android:name="com.das.proyectodas.FavoritosFragment"
+        android:label="Favoritos"
+        tools:layout="@layout/fragment_favoritos" />
+
 </navigation>

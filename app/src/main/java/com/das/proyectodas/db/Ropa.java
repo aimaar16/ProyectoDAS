@@ -7,12 +7,12 @@ import androidx.room.PrimaryKey;
 public class Ropa {
 
     @PrimaryKey(autoGenerate = true)
-    private int id; // Room lo usará para identificar cada prenda de forma única
+    private int id;
 
     private String nombre;
     private String categoria;
     private int imagenResId;
-    private boolean esFavorito; // <--- Aquí se guarda si es favorita o no
+    private boolean esFavorito;
 
     // Constructor
     public Ropa(String nombre, String categoria, int imagenResId, boolean esFavorito) {

@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.das.proyectodas.db.AppDatabase;
 import com.das.proyectodas.db.Ropa;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -23,27 +24,54 @@ import java.util.List;
 
 public class ArmarioFragment extends Fragment {
 
+    private RecyclerView recyclerView;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_armario, container, false);
 
-        RecyclerView recyclerView = root.findViewById(R.id.recyclerArmario);
+        recyclerView = root.findViewById(R.id.recyclerArmario);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
-        // Cargar datos desde el JSON en assets
-        List<Ropa> misPrendas = cargarRopaDesdeJSON();
-
-        RopaAdapter adapter = new RopaAdapter(misPrendas);
-        recyclerView.setAdapter(adapter);
+        // Iniciamos la carga
+        cargarDatos();
 
         return root;
+    }
+
+    private void cargarDatos() {
+        // Room no permite trabajar en el hilo principal
+        new Thread(() -> {
+            AppDatabase db = AppDatabase.getDatabase(getContext());
+
+            // 1. Intentamos obtener lo que ya hay en la DB
+            List<Ropa> listaDB = db.ropaDao().obtenerTodaLaRopa();
+
+            // 2. Si es la primera vez, volcamos el JSON a Room
+            if (listaDB.isEmpty()) {
+                List<Ropa> listaJson = cargarRopaDesdeJSON();
+                for (Ropa r : listaJson) {
+                    db.ropaDao().insertarPrenda(r);
+                }
+                // Volvemos a leer para obtener los objetos con sus IDs generados
+                listaDB = db.ropaDao().obtenerTodaLaRopa();
+            }
+
+            // 3. Pasamos la lista con IDs reales al adaptador en el hilo UI
+            List<Ropa> listaFinal = listaDB;
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    RopaAdapter adapter = new RopaAdapter(listaFinal);
+                    recyclerView.setAdapter(adapter);
+                });
+            }
+        }).start();
     }
 
     private List<Ropa> cargarRopaDesdeJSON() {
         String json = null;
         try {
-            // Abrir el archivo desde la carpeta assets
             InputStream is = requireContext().getAssets().open("ropa_prueba.json");
             int size = is.available();
             byte[] buffer = new byte[size];
@@ -55,7 +83,6 @@ public class ArmarioFragment extends Fragment {
             return new ArrayList<>();
         }
 
-        // Convertir el String JSON a una Lista de objetos Ropa usando GSON
         Gson gson = new Gson();
         Type listType = new TypeToken<List<Ropa>>() {}.getType();
         return gson.fromJson(json, listType);
