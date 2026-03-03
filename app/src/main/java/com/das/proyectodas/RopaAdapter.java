@@ -7,6 +7,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.das.proyectodas.db.Ropa;
+
 import java.util.List;
 
 public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder> {

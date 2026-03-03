@@ -12,7 +12,7 @@
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginTop="60dp"
-        android:src="@drawable/ic_launcher_foreground"
+        android:src="@drawable/ic_armario"
         app:tint="#6200EE"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,8 +23,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Bienvenido a MyCloset"
-        android:textSize="28sp"
+        android:text="Bienvenido a Mi Armario DAS"
+        android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#333333"
         app:layout_constraintEnd_toEndOf="parent"
@@ -38,23 +38,11 @@
         android:layout_marginTop="16dp"
         android:gravity="center"
         android:lineSpacingExtra="4dp"
-        android:text="Gestiona tus prendas, crea combinaciones increíbles y organiza tu armario digital de forma sencilla y rápida."
+        android:text="Gestiona tus outfits diarios, crea combinaciones increíbles y organiza tu armario digital de forma sencilla y rápida."
         android:textSize="16sp"
         android:textColor="#666666"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_bienvenida" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_empezar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:text="Ver mi armario"
-        android:backgroundTint="#6200EE"
-        app:cornerRadius="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

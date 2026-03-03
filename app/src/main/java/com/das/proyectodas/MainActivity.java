@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
             NavigationUI.setupWithNavController(navigationView, navController);
         }
 
-
         //Ajustar el botón de irse atrás en el movil
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -75,10 +74,6 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(),"Pulsa otra vez para salir",Toast.LENGTH_SHORT).show();
                         tiempoClick = System.currentTimeMillis();
                     }
-
-
-
-
                 }
             }
         });

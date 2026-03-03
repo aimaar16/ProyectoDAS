@@ -1,0 +1,14 @@
+[
+  {
+    "nombre": "Chaqueta Cuero",
+    "categoria": "Abrigo",
+    "imagenResId": 2131165271,
+    "esFavorito": false
+  },
+  {
+    "nombre": "Pantalón Vaquero",
+    "categoria": "Pantalón",
+    "imagenResId": 2131165271,
+    "esFavorito": true
+  }
+]

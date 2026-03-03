@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav"
-    app:startDestination="@id/fragment_armario">
+    app:startDestination="@id/fragment_inicio">
 
     <fragment
         android:id="@+id/fragment_armario"
@@ -11,6 +11,10 @@
         android:label="Mi Armario"
         tools:layout="@layout/fragment_armario" />
 
-
+    <fragment
+        android:id="@+id/fragment_inicio"
+        android:name="com.das.proyectodas.InicioFragment"
+        android:label="Inicio"
+        tools:layout="@layout/fragment_inicio" />
 
 </navigation>
