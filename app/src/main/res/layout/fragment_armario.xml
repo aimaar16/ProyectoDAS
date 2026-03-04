@@ -32,4 +32,16 @@
         app:layout_constraintTop_toBottomOf="@id/titulo_armario"
         tools:listitem="@layout/item_ropa" />
 
+    <Button
+        android:id="@+id/btnAnadirRopa"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Añadir Ropa"
+        android:backgroundTint="#4A148C"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

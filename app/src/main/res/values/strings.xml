@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">ProyectoDAS</string>
+
+    <string-array name="categorias_ropa">
+        <item>Camiseta</item>
+        <item>Pantalón</item>
+        <item>Chaqueta</item>
+        <item>Calzado</item>
+        <item>Accesorio</item>
+        <item>Otros</item>
+    </string-array>
 </resources>

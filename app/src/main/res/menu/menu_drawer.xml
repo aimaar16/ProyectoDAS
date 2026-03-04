@@ -17,17 +17,12 @@
             </item>
         </menu>
     </item>
-    <item android:title="Opciones">
+    <item android:title="Extra">
         <menu>
             <item
                 android:id="@+id/fragment_favoritos"
                 android:icon="@drawable/ic_favorite"
                 android:title="Ropa Favorita" />
-
-            <item
-                android:id="@+id/fragment_añadirRopa"
-                android:icon="@drawable/ic_add"
-                android:title="Añadir Ropa" />
         </menu>
     </item>
 </menu>

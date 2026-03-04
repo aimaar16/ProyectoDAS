@@ -32,29 +32,38 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
     public void onBindViewHolder(@NonNull RopaViewHolder holder, int position) {
         Ropa item = listaRopa.get(position);
         holder.nombre.setText(item.getNombre());
-        holder.imagen.setImageResource(item.getImagenResId());
 
-        // 1. Configurar el icono inicial
+        // USAMOS EL NOMBRE CORRECTO: holder.imagen (que es como está en tu ViewHolder)
+        int idImagen = item.getImagenResId();
+
+        try {
+            if (idImagen != 0) {
+                holder.imagen.setImageResource(idImagen);
+            } else {
+                holder.imagen.setImageResource(R.drawable.ic_launcher_background);
+            }
+        } catch (Exception e) {
+            // Esto evita que si el ID del JSON es viejo, la app se cierre
+            holder.imagen.setImageResource(R.drawable.ic_launcher_background);
+        }
+
+        // --- Lógica de favoritos ---
         if (item.isEsFavorito()) {
             holder.btnFavorito.setImageResource(android.R.drawable.btn_star_big_on);
         } else {
             holder.btnFavorito.setImageResource(android.R.drawable.btn_star_big_off);
         }
 
-        // 2. Listener para el clic
         holder.btnFavorito.setOnClickListener(v -> {
-            // Cambiamos el estado en el objeto local
             boolean nuevoEstado = !item.isEsFavorito();
             item.setEsFavorito(nuevoEstado);
 
-            // Actualizamos en la Base de Datos (en hilo secundario)
             new Thread(() -> {
                 AppDatabase db = AppDatabase.getDatabase(v.getContext());
                 db.ropaDao().actualizarPrenda(item);
 
-                // Volvemos al hilo principal para refrescar solo este item
                 holder.itemView.post(() -> {
-                    notifyItemChanged(position);
+                    notifyItemChanged(holder.getAdapterPosition()); // Mejor usar getAdapterPosition()
                 });
             }).start();
         });
