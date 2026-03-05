@@ -1,6 +1,7 @@
 package com.das.proyectodas.db;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
@@ -21,4 +22,10 @@ public interface RopaDao {
 
     @Update
     void actualizarPrenda(Ropa ropa);
+
+    @Query("DELETE FROM tabla_ropa")
+    void eliminarTodaLaRopa();
+
+    @Delete
+    void eliminarPrenda(Ropa ropa);
 }

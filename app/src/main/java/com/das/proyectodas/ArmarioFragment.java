@@ -43,7 +43,8 @@ public class ArmarioFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private Button btnAnadir;
-    private Uri fotoUri;
+    private Button btnEliminar;
+    private List<Ropa> listaActualRopa = new ArrayList<>();
 
     @Nullable
     @Override
@@ -57,37 +58,102 @@ public class ArmarioFragment extends Fragment {
 
         btnAnadir = root.findViewById(R.id.btnAnadirRopa);
         btnAnadir.setOnClickListener(v -> {
-            // CAMBIO AQUÍ: Primero comprobamos el permiso
             verificarPermisosYAbrirCamara();
+        });
+
+        btnEliminar = root.findViewById(R.id.btnEliminarRopa);
+        btnEliminar.setOnClickListener(v -> {
+            mostrarOpcionesEliminar();
         });
 
         return root;
     }
 
     private void cargarDatos() {
-        // Room no permite trabajar en el hilo principal
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
-
-            // 1. Intentamos obtener lo que ya hay en la DB
             List<Ropa> listaDB = db.ropaDao().obtenerTodaLaRopa();
 
-            // 2. Si es la primera vez, volcamos el JSON a Room
             if (listaDB.isEmpty()) {
-                List<Ropa> listaJson = cargarRopaDesdeJSON();
-                for (Ropa r : listaJson) {
-                    db.ropaDao().insertarPrenda(r);
-                }
-                // Volvemos a leer para obtener los objetos con sus IDs generados
-                listaDB = db.ropaDao().obtenerTodaLaRopa();
+                // Aquí podrías decidir si cargar los de prueba o no. 
+                // Por ahora lo dejamos vacío si se ha borrado.
             }
 
-            // 3. Pasamos la lista con IDs reales al adaptador en el hilo UI
-            List<Ropa> listaFinal = listaDB;
+            listaActualRopa = listaDB;
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    RopaAdapter adapter = new RopaAdapter(listaFinal);
+                    RopaAdapter adapter = new RopaAdapter(listaActualRopa);
                     recyclerView.setAdapter(adapter);
+                });
+            }
+        }).start();
+    }
+
+    private void mostrarOpcionesEliminar() {
+        String[] opciones = {"Borrar una prenda", "Vaciar armario completo"};
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("¿Qué quieres eliminar?")
+                .setItems(opciones, (dialog, which) -> {
+                    if (which == 0) {
+                        mostrarDialogoElegirUna();
+                    } else {
+                        mostrarDialogoConfirmarTodo();
+                    }
+                })
+                .show();
+    }
+
+    private void mostrarDialogoElegirUna() {
+        if (listaActualRopa.isEmpty()) {
+            Toast.makeText(getContext(), "No hay ropa para eliminar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] nombres = new String[listaActualRopa.size()];
+        for (int i = 0; i < listaActualRopa.size(); i++) {
+            nombres[i] = listaActualRopa.get(i).getNombre();
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Selecciona la prenda a eliminar")
+                .setItems(nombres, (dialog, which) -> {
+                    eliminarPrendaEspecifica(listaActualRopa.get(which));
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void eliminarPrendaEspecifica(Ropa ropa) {
+        new Thread(() -> {
+            AppDatabase.getDatabase(getContext()).ropaDao().eliminarPrenda(ropa);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "Prenda eliminada: " + ropa.getNombre(), Toast.LENGTH_SHORT).show();
+                    cargarDatos();
+                });
+            }
+        }).start();
+    }
+
+    private void mostrarDialogoConfirmarTodo() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Eliminar toda la ropa")
+                .setMessage("¿Estás seguro de que quieres vaciar el armario? Esta acción no se puede deshacer.")
+                .setPositiveButton("Eliminar Todo", (dialog, which) -> {
+                    vaciarArmario();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void vaciarArmario() {
+        new Thread(() -> {
+            AppDatabase.getDatabase(getContext()).ropaDao().eliminarTodaLaRopa();
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "Armario vaciado", Toast.LENGTH_SHORT).show();
+                    cargarDatos();
                 });
             }
         }).start();
@@ -111,28 +177,29 @@ public class ArmarioFragment extends Fragment {
         Type listType = new TypeToken<List<Ropa>>() {}.getType();
         return gson.fromJson(json, listType);
     }
+
     private void verificarPermisosYAbrirCamara() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            // Si ya tenemos permiso, abrimos la cámara
             abrirCamara();
         } else {
-            // Si no, lo pedimos usando el launcher que ya definiste
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
     }
+
     private void abrirCamara() {
         cameraLauncher.launch(null);
     }
-    // Registramos el lanzador para la cámara
+
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     abrirCamara();
                 } else {
-                    Toast.makeText(getContext(), "Permiso de cámara denegado. No puedes añadir fotos.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Permiso de cámara denegado.", Toast.LENGTH_LONG).show();
                 }
             });
+
     private final ActivityResultLauncher<Void> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.TakePicturePreview(),
             bitmap -> {
@@ -141,11 +208,11 @@ public class ArmarioFragment extends Fragment {
                 }
             }
     );
+
     private void mostrarDialogoNuevaRopa(Bitmap bitmap) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Nueva Prenda");
 
-        // Layout sencillo para el diálogo
         View viewInflated = LayoutInflater.from(requireContext()).inflate(R.layout.nueva_ropa, null);
         final EditText inputNombre = viewInflated.findViewById(R.id.editNombre);
         final Spinner spinnerCat = viewInflated.findViewById(R.id.spinnerCategoria);
@@ -157,28 +224,17 @@ public class ArmarioFragment extends Fragment {
             String nombre = inputNombre.getText().toString();
             String categoria = spinnerCat.getSelectedItem().toString();
             boolean esFavorito = checkFav.isChecked();
-
-            // Imagen por defecto
             int imagenPath = R.drawable.ic_launcher_background;
-
             guardarEnBaseDeDatos(new Ropa(nombre, categoria, imagenPath, esFavorito));
         });
 
         builder.setNegativeButton("Cancelar", (dialog, i) -> dialog.cancel());
         builder.show();
     }
-    //Metodo de utilidad para pasar la imagen a la DB
-    private String bitmapToString(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        byte[] b = baos.toByteArray();
-        return Base64.encodeToString(b, Base64.DEFAULT);
-    }
 
     private void guardarEnBaseDeDatos(Ropa nuevaPrenda) {
         new Thread(() -> {
             AppDatabase.getDatabase(getContext()).ropaDao().insertarPrenda(nuevaPrenda);
-            // Recargamos la lista en el hilo principal
             getActivity().runOnUiThread(this::cargarDatos);
         }).start();
     }
