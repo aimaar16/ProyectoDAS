@@ -2,13 +2,13 @@
   {
     "nombre": "Chaqueta Cuero",
     "categoria": "Abrigo",
-    "imagenResId": 2131165271,
+    "imagenNombre": "chaqueta_cuero",
     "esFavorito": false
   },
   {
     "nombre": "Pantalón Vaquero",
     "categoria": "Pantalón",
-    "imagenResId": 2131165271,
+    "imagenNombre": "pantalon_vaquero",
     "esFavorito": false
   }
 ]

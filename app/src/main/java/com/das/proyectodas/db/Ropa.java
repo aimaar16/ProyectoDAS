@@ -12,6 +12,8 @@ public class Ropa {
     private String nombre;
     private String categoria;
     private int imagenResId;
+    private String imagenNombre; // Nombre del recurso en drawable (ej: "chaqueta_cuero")
+    private String imagenUri;    // Ruta para fotos de la cámara
     private boolean esFavorito;
 
     // Constructor
@@ -22,7 +24,7 @@ public class Ropa {
         this.esFavorito = esFavorito;
     }
 
-    // Getters y Setters necesarios para Room
+    // Getters y Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -34,6 +36,12 @@ public class Ropa {
 
     public int getImagenResId() { return imagenResId; }
     public void setImagenResId(int imagenResId) { this.imagenResId = imagenResId; }
+
+    public String getImagenNombre() { return imagenNombre; }
+    public void setImagenNombre(String imagenNombre) { this.imagenNombre = imagenNombre; }
+
+    public String getImagenUri() { return imagenUri; }
+    public void setImagenUri(String imagenUri) { this.imagenUri = imagenUri; }
 
     public boolean isEsFavorito() { return esFavorito; }
     public void setEsFavorito(boolean esFavorito) { this.esFavorito = esFavorito; }

@@ -1,8 +1,10 @@
 package com.das.proyectodas;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +29,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -75,8 +79,11 @@ public class ArmarioFragment extends Fragment {
             List<Ropa> listaDB = db.ropaDao().obtenerTodaLaRopa();
 
             if (listaDB.isEmpty()) {
-                // Aquí podrías decidir si cargar los de prueba o no. 
-                // Por ahora lo dejamos vacío si se ha borrado.
+                List<Ropa> listaJson = cargarRopaDesdeJSON();
+                for (Ropa r : listaJson) {
+                    db.ropaDao().insertarPrenda(r);
+                }
+                listaDB = db.ropaDao().obtenerTodaLaRopa();
             }
 
             listaActualRopa = listaDB;
@@ -126,7 +133,15 @@ public class ArmarioFragment extends Fragment {
 
     private void eliminarPrendaEspecifica(Ropa ropa) {
         new Thread(() -> {
-            AppDatabase.getDatabase(getContext()).ropaDao().eliminarPrenda(ropa);
+            AppDatabase db = AppDatabase.getDatabase(getContext());
+            db.ropaDao().eliminarPrenda(ropa);
+            
+            // Si tiene imagen guardada en disco, borrarla también
+            if (ropa.getImagenUri() != null) {
+                File file = new File(ropa.getImagenUri());
+                if (file.exists()) file.delete();
+            }
+
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     Toast.makeText(getContext(), "Prenda eliminada: " + ropa.getNombre(), Toast.LENGTH_SHORT).show();
@@ -149,7 +164,18 @@ public class ArmarioFragment extends Fragment {
 
     private void vaciarArmario() {
         new Thread(() -> {
-            AppDatabase.getDatabase(getContext()).ropaDao().eliminarTodaLaRopa();
+            AppDatabase db = AppDatabase.getDatabase(getContext());
+            List<Ropa> todas = db.ropaDao().obtenerTodaLaRopa();
+            
+            // Borrar archivos de imagen
+            for (Ropa r : todas) {
+                if (r.getImagenUri() != null) {
+                    File file = new File(r.getImagenUri());
+                    if (file.exists()) file.delete();
+                }
+            }
+
+            db.ropaDao().eliminarTodaLaRopa();
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     Toast.makeText(getContext(), "Armario vaciado", Toast.LENGTH_SHORT).show();
@@ -224,12 +250,32 @@ public class ArmarioFragment extends Fragment {
             String nombre = inputNombre.getText().toString();
             String categoria = spinnerCat.getSelectedItem().toString();
             boolean esFavorito = checkFav.isChecked();
-            int imagenPath = R.drawable.ic_launcher_background;
-            guardarEnBaseDeDatos(new Ropa(nombre, categoria, imagenPath, esFavorito));
+            
+            // Guardar el bitmap en un archivo y obtener su URI
+            String uri = guardarImagenEnAlmacenamiento(bitmap, nombre);
+            
+            Ropa nuevaPrenda = new Ropa(nombre, categoria, 0, esFavorito);
+            nuevaPrenda.setImagenUri(uri);
+            
+            guardarEnBaseDeDatos(nuevaPrenda);
         });
 
         builder.setNegativeButton("Cancelar", (dialog, i) -> dialog.cancel());
         builder.show();
+    }
+
+    private String guardarImagenEnAlmacenamiento(Bitmap bitmap, String nombre) {
+        File directory = new File(requireContext().getFilesDir(), "imagenes_ropa");
+        if (!directory.exists()) directory.mkdirs();
+
+        File file = new File(directory, nombre + "_" + System.currentTimeMillis() + ".jpg");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void guardarEnBaseDeDatos(Ropa nuevaPrenda) {

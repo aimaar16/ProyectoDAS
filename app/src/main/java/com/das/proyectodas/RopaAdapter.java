@@ -1,9 +1,10 @@
 package com.das.proyectodas;
 
+import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton; // Asegúrate de usar ImageButton o ImageView
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.das.proyectodas.db.AppDatabase;
 import com.das.proyectodas.db.Ropa;
 
+import java.io.File;
 import java.util.List;
 
 public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder> {
@@ -31,20 +33,35 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
     @Override
     public void onBindViewHolder(@NonNull RopaViewHolder holder, int position) {
         Ropa item = listaRopa.get(position);
+        Context context = holder.itemView.getContext();
         holder.nombre.setText(item.getNombre());
 
-        // USAMOS EL NOMBRE CORRECTO: holder.imagen (que es como está en tu ViewHolder)
-        int idImagen = item.getImagenResId();
-
-        try {
+        // 1. Prioridad: Foto de la cámara (URI)
+        if (item.getImagenUri() != null && !item.getImagenUri().isEmpty()) {
+            File imgFile = new File(item.getImagenUri());
+            if (imgFile.exists()) {
+                holder.imagen.setImageURI(Uri.fromFile(imgFile));
+            } else {
+                holder.imagen.setImageResource(R.drawable.ic_launcher_background);
+            }
+        } 
+        // 2. Segunda prioridad: Nombre del recurso drawable (del JSON)
+        else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
+            int resId = context.getResources().getIdentifier(item.getImagenNombre(), "drawable", context.getPackageName());
+            if (resId != 0) {
+                holder.imagen.setImageResource(resId);
+            } else {
+                holder.imagen.setImageResource(R.drawable.ic_launcher_background);
+            }
+        }
+        // 3. Fallback: imagenResId o defecto
+        else {
+            int idImagen = item.getImagenResId();
             if (idImagen != 0) {
                 holder.imagen.setImageResource(idImagen);
             } else {
                 holder.imagen.setImageResource(R.drawable.ic_launcher_background);
             }
-        } catch (Exception e) {
-            // Esto evita que si el ID del JSON es viejo, la app se cierre
-            holder.imagen.setImageResource(R.drawable.ic_launcher_background);
         }
 
         // --- Lógica de favoritos ---
@@ -63,7 +80,7 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
                 db.ropaDao().actualizarPrenda(item);
 
                 holder.itemView.post(() -> {
-                    notifyItemChanged(holder.getAdapterPosition()); // Mejor usar getAdapterPosition()
+                    notifyItemChanged(holder.getAdapterPosition());
                 });
             }).start();
         });
@@ -81,7 +98,6 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
             super(v);
             imagen = v.findViewById(R.id.imgPrenda);
             nombre = v.findViewById(R.id.txtNombrePrenda);
-
             btnFavorito = v.findViewById(R.id.btnFavorito);
         }
     }

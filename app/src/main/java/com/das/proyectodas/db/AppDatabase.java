@@ -5,7 +5,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {Ropa.class}, version = 1, exportSchema = false)
+@Database(entities = {Ropa.class}, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract RopaDao ropaDao();
@@ -17,7 +17,9 @@ public abstract class AppDatabase extends RoomDatabase {
             synchronized (AppDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                                    AppDatabase.class, "ropa_database").build();
+                                    AppDatabase.class, "ropa_database")
+                            .fallbackToDestructiveMigration()
+                            .build();
                 }
             }
         }
