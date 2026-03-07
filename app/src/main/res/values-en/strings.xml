@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">MyCloset</string>
+    <string name="title_armario">My Closet</string>
+    <string name="title_favoritos">Favorite Clothes</string>
+    <string name="title_outfit">My Outfit</string>
+    <string name="title_anadir">Add Clothing</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_closet">Closet</string>
+    <string name="menu_favorites">Favorites</string>
+    <string name="menu_outfit">Outfit</string>
+    <string name="menu_add">Add</string>
+
+    <string name="btn_add_clothing">Add Clothing</string>
+    <string name="btn_delete_clothing">Delete Clothing</string>
+    <string name="dialog_delete_title">What do you want to delete?</string>
+    <string name="dialog_delete_one">Delete one item</string>
+    <string name="dialog_delete_all">Empty entire closet</string>
+
+    <string name="change_language">Change Language</string>
+    <string name="lang_es">Spanish</string>
+    <string name="lang_en">English</string>
+
+    <string-array name="categorias_ropa">
+        <item>T-shirt</item>
+        <item>Pants</item>
+        <item>Jacket</item>
+        <item>Footwear</item>
+        <item>Accessory</item>
+        <item>Others</item>
+    </string-array>
+</resources>

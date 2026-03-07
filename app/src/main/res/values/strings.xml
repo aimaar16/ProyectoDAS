@@ -1,5 +1,25 @@
 <resources>
-    <string name="app_name">ProyectoDAS</string>
+    <string name="app_name">MyCloset</string>
+    <string name="title_armario">Mi Armario</string>
+    <string name="title_favoritos">Ropa Favorita</string>
+    <string name="title_outfit">Mi Outfit</string>
+    <string name="title_anadir">Añadir Ropa</string>
+
+    <string name="menu_home">Inicio</string>
+    <string name="menu_closet">Armario</string>
+    <string name="menu_favorites">Favoritos</string>
+    <string name="menu_outfit">Outfit</string>
+    <string name="menu_add">Añadir</string>
+
+    <string name="btn_add_clothing">Añadir Ropa</string>
+    <string name="btn_delete_clothing">Eliminar Ropa</string>
+    <string name="dialog_delete_title">¿Qué quieres eliminar?</string>
+    <string name="dialog_delete_one">Borrar una prenda</string>
+    <string name="dialog_delete_all">Vaciar armario completo</string>
+
+    <string name="change_language">Cambiar Idioma</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_en">Inglés</string>
 
     <string-array name="categorias_ropa">
         <item>Camiseta</item>

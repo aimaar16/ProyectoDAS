@@ -12,8 +12,8 @@ public class Ropa {
     private String nombre;
     private String categoria;
     private int imagenResId;
-    private String imagenNombre; // Nombre del recurso en drawable (ej: "chaqueta_cuero")
-    private String imagenUri;    // Ruta para fotos de la cámara
+    private String imagenNombre;
+    private String imagenUri;
     private boolean esFavorito;
 
     // Constructor

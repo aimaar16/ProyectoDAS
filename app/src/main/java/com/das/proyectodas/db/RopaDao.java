@@ -16,7 +16,7 @@ public interface RopaDao {
     @Query("SELECT * FROM tabla_ropa")
     List<Ropa> obtenerTodaLaRopa();
 
-    // Esta es la consulta clave para tu FavoritosFragment
+
     @Query("SELECT * FROM tabla_ropa WHERE esFavorito = 1")
     List<Ropa> obtenerFavoritos();
 
