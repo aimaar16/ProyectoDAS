@@ -16,9 +16,14 @@ public interface RopaDao {
     @Query("SELECT * FROM tabla_ropa")
     List<Ropa> obtenerTodaLaRopa();
 
-
     @Query("SELECT * FROM tabla_ropa WHERE esFavorito = 1")
     List<Ropa> obtenerFavoritos();
+
+    @Query("SELECT * FROM tabla_ropa WHERE diaSemana != ''")
+    List<Ropa> obtenerOutfit();
+
+    @Query("SELECT * FROM tabla_ropa WHERE diaSemana = :dia")
+    List<Ropa> obtenerRopaPorDia(String dia);
 
     @Update
     void actualizarPrenda(Ropa ropa);

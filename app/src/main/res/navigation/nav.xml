@@ -23,4 +23,10 @@
         android:label="Favoritos"
         tools:layout="@layout/fragment_favoritos" />
 
+    <fragment
+        android:id="@+id/fragment_outfit"
+        android:name="com.das.proyectodas.OutfitFragment"
+        android:label="Outfit"
+        tools:layout="@layout/fragment_outfit" />
+
 </navigation>

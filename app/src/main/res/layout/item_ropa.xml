@@ -30,13 +30,31 @@
             android:text="Nombre de la prenda"
             android:textStyle="bold" />
 
-        <ImageButton
-            android:id="@+id/btnFavorito"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_favorite"
-            android:contentDescription="Añadir a favoritos" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="4dp">
+
+            <ImageButton
+                android:id="@+id/btnFavorito"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/btn_star_big_off"
+                android:contentDescription="Añadir a favoritos" />
+
+            <ImageButton
+                android:id="@+id/btnAddToOutfit"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_add"
+                app:tint="#4A148C"
+                android:contentDescription="Añadir al outfit" />
+
+        </LinearLayout>
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

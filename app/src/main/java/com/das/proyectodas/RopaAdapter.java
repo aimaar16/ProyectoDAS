@@ -5,9 +5,13 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.das.proyectodas.db.AppDatabase;
@@ -36,7 +40,7 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
         Context context = holder.itemView.getContext();
         holder.nombre.setText(item.getNombre());
 
-        // 1. Prioridad: Foto de la cámara (URI)
+        // Cargar imagen
         if (item.getImagenUri() != null && !item.getImagenUri().isEmpty()) {
             File imgFile = new File(item.getImagenUri());
             if (imgFile.exists()) {
@@ -44,46 +48,50 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
             } else {
                 holder.imagen.setImageResource(R.drawable.ic_launcher_background);
             }
-        } 
-        // 2. Segunda prioridad: Nombre del recurso drawable (del JSON)
-        else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
+        } else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
             int resId = context.getResources().getIdentifier(item.getImagenNombre(), "drawable", context.getPackageName());
-            if (resId != 0) {
-                holder.imagen.setImageResource(resId);
-            } else {
-                holder.imagen.setImageResource(R.drawable.ic_launcher_background);
-            }
-        }
-        // 3. Fallback: imagenResId o defecto
-        else {
-            int idImagen = item.getImagenResId();
-            if (idImagen != 0) {
-                holder.imagen.setImageResource(idImagen);
-            } else {
-                holder.imagen.setImageResource(R.drawable.ic_launcher_background);
-            }
-        }
-
-        // --- Lógica de favoritos ---
-        if (item.isEsFavorito()) {
-            holder.btnFavorito.setImageResource(android.R.drawable.btn_star_big_on);
+            holder.imagen.setImageResource(resId != 0 ? resId : R.drawable.ic_launcher_background);
         } else {
-            holder.btnFavorito.setImageResource(android.R.drawable.btn_star_big_off);
+            int idImagen = item.getImagenResId();
+            holder.imagen.setImageResource(idImagen != 0 ? idImagen : R.drawable.ic_launcher_background);
         }
 
+        // Favoritos
+        holder.btnFavorito.setImageResource(item.isEsFavorito() ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
         holder.btnFavorito.setOnClickListener(v -> {
-            boolean nuevoEstado = !item.isEsFavorito();
-            item.setEsFavorito(nuevoEstado);
-
+            item.setEsFavorito(!item.isEsFavorito());
             new Thread(() -> {
-                AppDatabase db = AppDatabase.getDatabase(v.getContext());
-                db.ropaDao().actualizarPrenda(item);
-
-                holder.itemView.post(() -> {
-                    notifyItemChanged(holder.getAdapterPosition());
-                });
+                AppDatabase.getDatabase(context).ropaDao().actualizarPrenda(item);
+                holder.itemView.post(() -> notifyItemChanged(holder.getAdapterPosition()));
             }).start();
         });
+
+        // Botón Añadir al Outfit
+        holder.btnOutfit.setOnClickListener(v -> {
+            mostrarDialogoSeleccionarDia(context, item);
+        });
+    }
+
+    private void mostrarDialogoSeleccionarDia(Context context, Ropa item) {
+        String[] dias = context.getResources().getStringArray(R.array.dias_semana);
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.select_day)
+                .setItems(dias, (dialog, which) -> {
+                    String diaSeleccionado = dias[which];
+                    item.setDiaSemana(diaSeleccionado);
+                    
+                    new Thread(() -> {
+                        AppDatabase.getDatabase(context).ropaDao().actualizarPrenda(item);
+                        // Usamos el context para mostrar el Toast en el hilo principal
+                        if (context instanceof MainActivity) {
+                            ((MainActivity) context).runOnUiThread(() -> {
+                                Toast.makeText(context, item.getNombre() + " añadido al " + diaSeleccionado, Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    }).start();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     @Override
@@ -92,13 +100,14 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
     public static class RopaViewHolder extends RecyclerView.ViewHolder {
         ImageView imagen;
         TextView nombre;
-        ImageView btnFavorito;
+        ImageButton btnFavorito, btnOutfit;
 
         public RopaViewHolder(@NonNull View v) {
             super(v);
             imagen = v.findViewById(R.id.imgPrenda);
             nombre = v.findViewById(R.id.txtNombrePrenda);
             btnFavorito = v.findViewById(R.id.btnFavorito);
+            btnOutfit = v.findViewById(R.id.btnAddToOutfit);
         }
     }
 }

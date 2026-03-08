@@ -15,6 +15,7 @@ public class Ropa {
     private String imagenNombre;
     private String imagenUri;
     private boolean esFavorito;
+    private String diaSemana;
 
     // Constructor
     public Ropa(String nombre, String categoria, int imagenResId, boolean esFavorito) {
@@ -22,6 +23,7 @@ public class Ropa {
         this.categoria = categoria;
         this.imagenResId = imagenResId;
         this.esFavorito = esFavorito;
+        this.diaSemana = "";
     }
 
     // Getters y Setters
@@ -45,4 +47,7 @@ public class Ropa {
 
     public boolean isEsFavorito() { return esFavorito; }
     public void setEsFavorito(boolean esFavorito) { this.esFavorito = esFavorito; }
+
+    public String getDiaSemana() { return diaSemana; }
+    public void setDiaSemana(String diaSemana) { this.diaSemana = diaSemana; }
 }
