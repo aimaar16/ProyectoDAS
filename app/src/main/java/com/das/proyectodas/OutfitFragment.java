@@ -20,6 +20,7 @@ import com.das.proyectodas.db.Ropa;
 import java.util.ArrayList;
 import java.util.List;
 
+// Esta pantalla es para ver qué ropa nos vamos a poner cada día
 public class OutfitFragment extends Fragment {
 
     private RecyclerView recyclerView;
@@ -32,17 +33,19 @@ public class OutfitFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_outfit, container, false);
 
+        // Ponemos la lista en dos columnas
         recyclerView = root.findViewById(R.id.recyclerOutfit);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
+        // Configuramos el desplegable de los días de la semana
         spinnerDia = root.findViewById(R.id.spinnerDiaOutfit);
         
-        // Configurar el Spinner con los días de la semana
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(requireContext(),
                 R.array.dias_semana, android.R.layout.simple_spinner_item);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerDia.setAdapter(spinnerAdapter);
 
+        // Cuando elijas un día en el desplegable, cargamos la ropa de ese día
         spinnerDia.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -57,11 +60,13 @@ public class OutfitFragment extends Fragment {
         return root;
     }
 
+    // Buscamos en la base de datos la ropa que coincida con el día elegido
     private void cargarRopaDelDia(String dia) {
         new Thread(() -> {
             List<Ropa> ropaDia = AppDatabase.getDatabase(getContext()).ropaDao().obtenerRopaPorDia(dia);
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
+                    // Actualizamos la lista con la ropa de ese día
                     adapter = new RopaAdapter(ropaDia);
                     recyclerView.setAdapter(adapter);
                 });

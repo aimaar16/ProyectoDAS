@@ -21,6 +21,14 @@
     <string name="lang_es">Spanish</string>
     <string name="lang_en">English</string>
 
+    <string name="select_day">Select Day</string>
+    <string name="add_to_outfit">Add to outfit</string>
+    <string name="remove_from_outfit">Remove from outfit</string>
+
+    <string name="welcome_title">Welcome to My DAS Closet</string>
+    <string name="welcome_desc">Manage your daily outfits, create amazing combinations and organize your digital closet in a simple and fast way.</string>
+    <string name="no_favorites">You don\'t have any favorite clothes yet</string>
+
     <string-array name="categorias_ropa">
         <item>T-shirt</item>
         <item>Pants</item>

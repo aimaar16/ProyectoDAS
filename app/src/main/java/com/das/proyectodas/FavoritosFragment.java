@@ -17,6 +17,7 @@ import com.das.proyectodas.db.Ropa;
 
 import java.util.List;
 
+// Esta pantalla es para ver solo la ropa que hemos marcado con la estrella (favoritos)
 public class FavoritosFragment extends Fragment {
 
     private RecyclerView recyclerView;
@@ -31,32 +32,36 @@ public class FavoritosFragment extends Fragment {
         recyclerView = root.findViewById(R.id.recyclerFavoritos);
         txtVacio = root.findViewById(R.id.txtVacio);
 
-
+        // Ponemos la lista en dos columnas igual que en el armario
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
+        // Cargamos la ropa favorita
         cargarFavoritos();
 
         return root;
     }
+
     @Override
     public void onResume() {
         super.onResume();
-        cargarFavoritos(); //Refresca la lista cada vez que la pantalla vuelve a ser visible
+        // Refrescamos la lista cada vez que entramos por si hemos quitado algún favorito
+        cargarFavoritos();
     }
+
+    // Aquí buscamos en la base de datos solo lo que tiene la estrella puesta
     private void cargarFavoritos() {
-        // Ejecutamos en un hilo secundario para Room
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
-            // Usamos el metodo que definimos en el DAO para filtrar
             List<Ropa> listaFavoritos = db.ropaDao().obtenerFavoritos();
 
-            // Volvemos al hilo principal para actualizar la UI
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
+                    // Si no hay nada favorito, enseñamos un texto avisando
                     if (listaFavoritos.isEmpty()) {
                         txtVacio.setVisibility(View.VISIBLE);
                         recyclerView.setVisibility(View.GONE);
                     } else {
+                        // Si hay cosas, las mostramos en la lista
                         txtVacio.setVisibility(View.GONE);
                         recyclerView.setVisibility(View.VISIBLE);
                         RopaAdapter adapter = new RopaAdapter(listaFavoritos);

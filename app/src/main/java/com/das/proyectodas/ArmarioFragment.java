@@ -43,6 +43,7 @@ import android.content.pm.PackageManager;
 import androidx.core.content.ContextCompat;
 import android.widget.Toast;
 
+// Esta pantalla es donde sale toda la ropa del armario
 public class ArmarioFragment extends Fragment {
 
     private RecyclerView recyclerView;
@@ -55,16 +56,20 @@ public class ArmarioFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_armario, container, false);
 
+        // Ponemos la lista en dos columnas
         recyclerView = root.findViewById(R.id.recyclerArmario);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
+        // Cargamos la ropa que haya guardada
         cargarDatos();
 
+        // Botón para añadir ropa nueva (abre la cámara)
         btnAnadir = root.findViewById(R.id.btnAnadirRopa);
         btnAnadir.setOnClickListener(v -> {
             verificarPermisosYAbrirCamara();
         });
 
+        // Botón para borrar ropa
         btnEliminar = root.findViewById(R.id.btnEliminarRopa);
         btnEliminar.setOnClickListener(v -> {
             mostrarOpcionesEliminar();
@@ -73,11 +78,13 @@ public class ArmarioFragment extends Fragment {
         return root;
     }
 
+    // Aquí leemos la base de datos para mostrar la ropa
     private void cargarDatos() {
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
             List<Ropa> listaDB = db.ropaDao().obtenerTodaLaRopa();
 
+            // Si el armario está vacío, metemos la ropa de prueba del JSON
             if (listaDB.isEmpty()) {
                 List<Ropa> listaJson = cargarRopaDesdeJSON();
                 for (Ropa r : listaJson) {
@@ -89,6 +96,7 @@ public class ArmarioFragment extends Fragment {
             listaActualRopa = listaDB;
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
+                    // Ponemos los datos en el adaptador para que se vean
                     RopaAdapter adapter = new RopaAdapter(listaActualRopa);
                     recyclerView.setAdapter(adapter);
                 });
@@ -96,6 +104,7 @@ public class ArmarioFragment extends Fragment {
         }).start();
     }
 
+    // Ventana para elegir si borrar una cosa o el armario entero
     private void mostrarOpcionesEliminar() {
         String[] opciones = {"Borrar una prenda", "Vaciar armario completo"};
         
@@ -103,14 +112,15 @@ public class ArmarioFragment extends Fragment {
                 .setTitle("¿Qué quieres eliminar?")
                 .setItems(opciones, (dialog, which) -> {
                     if (which == 0) {
-                        mostrarDialogoElegirUna();
+                        mostrarDialogoElegirUna(); // Borrar solo una
                     } else {
-                        mostrarDialogoConfirmarTodo();
+                        mostrarDialogoConfirmarTodo(); // Borrar por completo
                     }
                 })
                 .show();
     }
 
+    // Lista para elegir qué prenda borrar
     private void mostrarDialogoElegirUna() {
         if (listaActualRopa.isEmpty()) {
             Toast.makeText(getContext(), "No hay ropa para eliminar", Toast.LENGTH_SHORT).show();
@@ -131,12 +141,12 @@ public class ArmarioFragment extends Fragment {
                 .show();
     }
 
+    // Borramos la prenda de la base de datos y su foto si tiene
     private void eliminarPrendaEspecifica(Ropa ropa) {
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
             db.ropaDao().eliminarPrenda(ropa);
             
-            // Si tiene imagen guardada en disco, borrarla también
             if (ropa.getImagenUri() != null) {
                 File file = new File(ropa.getImagenUri());
                 if (file.exists()) file.delete();
@@ -145,12 +155,13 @@ public class ArmarioFragment extends Fragment {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     Toast.makeText(getContext(), "Prenda eliminada: " + ropa.getNombre(), Toast.LENGTH_SHORT).show();
-                    cargarDatos();
+                    cargarDatos(); // Refrescamos la lista
                 });
             }
         }).start();
     }
 
+    // Aviso para no borrar el armario sin querer
     private void mostrarDialogoConfirmarTodo() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Eliminar toda la ropa")
@@ -162,12 +173,12 @@ public class ArmarioFragment extends Fragment {
                 .show();
     }
 
+    // Borramos por completo
     private void vaciarArmario() {
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
             List<Ropa> todas = db.ropaDao().obtenerTodaLaRopa();
             
-            // Borrar archivos de imagen
             for (Ropa r : todas) {
                 if (r.getImagenUri() != null) {
                     File file = new File(r.getImagenUri());
@@ -185,6 +196,7 @@ public class ArmarioFragment extends Fragment {
         }).start();
     }
 
+    // Leemos el archivo JSON con la ropa de prueba
     private List<Ropa> cargarRopaDesdeJSON() {
         String json = null;
         try {
@@ -204,6 +216,7 @@ public class ArmarioFragment extends Fragment {
         return gson.fromJson(json, listType);
     }
 
+    // Miramos si tenemos permiso para usar la cámara
     private void verificarPermisosYAbrirCamara() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -217,6 +230,7 @@ public class ArmarioFragment extends Fragment {
         cameraLauncher.launch(null);
     }
 
+    // Si nos dan permiso, abrimos la cámara
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
@@ -226,6 +240,7 @@ public class ArmarioFragment extends Fragment {
                 }
             });
 
+    // Cuando hacemos la foto, abrimos el diálogo para guardarla
     private final ActivityResultLauncher<Void> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.TakePicturePreview(),
             bitmap -> {
@@ -235,6 +250,7 @@ public class ArmarioFragment extends Fragment {
             }
     );
 
+    // Ventana para ponerle nombre y categoría a la ropa nueva
     private void mostrarDialogoNuevaRopa(Bitmap bitmap) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Nueva Prenda");
@@ -251,7 +267,7 @@ public class ArmarioFragment extends Fragment {
             String categoria = spinnerCat.getSelectedItem().toString();
             boolean esFavorito = checkFav.isChecked();
             
-            // Guardar el bitmap en un archivo y obtener su URI
+            // Guardamos la foto en el móvil y nos quedamos con la ruta
             String uri = guardarImagenEnAlmacenamiento(bitmap, nombre);
             
             Ropa nuevaPrenda = new Ropa(nombre, categoria, 0, esFavorito);
@@ -264,6 +280,7 @@ public class ArmarioFragment extends Fragment {
         builder.show();
     }
 
+    // Guardamos la foto en una carpeta interna de la app
     private String guardarImagenEnAlmacenamiento(Bitmap bitmap, String nombre) {
         File directory = new File(requireContext().getFilesDir(), "imagenes_ropa");
         if (!directory.exists()) directory.mkdirs();
@@ -278,6 +295,7 @@ public class ArmarioFragment extends Fragment {
         }
     }
 
+    // Metemos la prenda en la base de datos de Room
     private void guardarEnBaseDeDatos(Ropa nuevaPrenda) {
         new Thread(() -> {
             AppDatabase.getDatabase(getContext()).ropaDao().insertarPrenda(nuevaPrenda);

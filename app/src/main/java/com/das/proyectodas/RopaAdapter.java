@@ -1,7 +1,12 @@
 package com.das.proyectodas;
 
+import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +17,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.das.proyectodas.db.AppDatabase;
@@ -20,6 +28,7 @@ import com.das.proyectodas.db.Ropa;
 import java.io.File;
 import java.util.List;
 
+// Este es el adaptador para mostrar cada prenda en la lista
 public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder> {
     private List<Ropa> listaRopa;
 
@@ -30,6 +39,7 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
     @NonNull
     @Override
     public RopaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Inflamos el diseño de cada tarjeta de ropa
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ropa, parent, false);
         return new RopaViewHolder(v);
     }
@@ -40,7 +50,7 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
         Context context = holder.itemView.getContext();
         holder.nombre.setText(item.getNombre());
 
-        // Cargar imagen
+        // Aquí cargamos la imagen: primero miramos si es una foto de la cámara
         if (item.getImagenUri() != null && !item.getImagenUri().isEmpty()) {
             File imgFile = new File(item.getImagenUri());
             if (imgFile.exists()) {
@@ -48,30 +58,36 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
             } else {
                 holder.imagen.setImageResource(R.drawable.ic_launcher_background);
             }
-        } else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
+        } 
+        // Si no, miramos si es una de las de prueba por nombre
+        else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
             int resId = context.getResources().getIdentifier(item.getImagenNombre(), "drawable", context.getPackageName());
             holder.imagen.setImageResource(resId != 0 ? resId : R.drawable.ic_launcher_background);
-        } else {
+        } 
+        // Si falla, ponemos una por defecto
+        else {
             int idImagen = item.getImagenResId();
             holder.imagen.setImageResource(idImagen != 0 ? idImagen : R.drawable.ic_launcher_background);
         }
 
-        // Favoritos
+        // Lógica para el botón de favoritos (la estrella)
         holder.btnFavorito.setImageResource(item.isEsFavorito() ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
         holder.btnFavorito.setOnClickListener(v -> {
             item.setEsFavorito(!item.isEsFavorito());
             new Thread(() -> {
-                AppDatabase.getDatabase(context).ropaDao().actualizarPrenda(item);
+                AppDatabase db = AppDatabase.getDatabase(context);
+                db.ropaDao().actualizarPrenda(item);
                 holder.itemView.post(() -> notifyItemChanged(holder.getAdapterPosition()));
             }).start();
         });
 
-        // Botón Añadir al Outfit
+        // Botón para elegir qué día te vas a poner la ropa
         holder.btnOutfit.setOnClickListener(v -> {
             mostrarDialogoSeleccionarDia(context, item);
         });
     }
 
+    // Ventana que sale para elegir el día de la semana
     private void mostrarDialogoSeleccionarDia(Context context, Ropa item) {
         String[] dias = context.getResources().getStringArray(R.array.dias_semana);
         new AlertDialog.Builder(context)
@@ -82,10 +98,11 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
                     
                     new Thread(() -> {
                         AppDatabase.getDatabase(context).ropaDao().actualizarPrenda(item);
-                        // Usamos el context para mostrar el Toast en el hilo principal
                         if (context instanceof MainActivity) {
                             ((MainActivity) context).runOnUiThread(() -> {
                                 Toast.makeText(context, item.getNombre() + " añadido al " + diaSeleccionado, Toast.LENGTH_SHORT).show();
+                                // Mandamos la notificación avisando de que se ha añadido
+                                lanzarNotificacionOutfit(context, item, diaSeleccionado);
                             });
                         }
                     }).start();
@@ -94,9 +111,39 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
                 .show();
     }
 
+    // Función para crear y lanzar la notificación del outfit
+    private void lanzarNotificacionOutfit(Context context, Ropa item, String dia) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra("notificacion_id", 1001);
+        
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, flags);
+
+        // Configuramos cómo se va a ver la notificación
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_menu_today)
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText("Has añadido " + item.getNombre() + " para el " + dia)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                // Botón que sale en la propia notificación
+                .addAction(android.R.drawable.ic_menu_view, "Ver Outfit", pendingIntent);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(1001, builder.build());
+        }
+    }
+
     @Override
     public int getItemCount() { return listaRopa.size(); }
 
+    // Clase para guardar las vistas de cada elemento de la lista
     public static class RopaViewHolder extends RecyclerView.ViewHolder {
         ImageView imagen;
         TextView nombre;

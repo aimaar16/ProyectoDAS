@@ -25,6 +25,10 @@
     <string name="add_to_outfit">Añadir al outfit</string>
     <string name="remove_from_outfit">Quitar del outfit</string>
 
+    <string name="welcome_title">Bienvenido a Mi Armario DAS</string>
+    <string name="welcome_desc">Gestiona tus outfits diarios, crea combinaciones increíbles y organiza tu armario digital de forma sencilla y rápida.</string>
+    <string name="no_favorites">Aún no tienes prendas favoritas</string>
+
     <string-array name="dias_semana">
         <item>Lunes</item>
         <item>Martes</item>
