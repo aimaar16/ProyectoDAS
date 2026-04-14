@@ -1,6 +1,7 @@
 package com.das.proyectodas;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -15,15 +16,11 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.graphics.Insets;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -59,13 +56,6 @@ public class MainActivity extends AppCompatActivity {
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         Toolbar toolbar = findViewById(R.id.barra);
         setSupportActionBar(toolbar);
-
-        // Esto es para que el diseño no se pegue a los bordes del móvil
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.drawer_layout), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
         // Ponemos el botón de las tres rayas para abrir el menú
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(

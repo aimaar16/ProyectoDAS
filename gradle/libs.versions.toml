@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.2" # Bajamos un poco para estabilidad
+agp = "9.0.1" # Bajamos un poco para estabilidad
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
