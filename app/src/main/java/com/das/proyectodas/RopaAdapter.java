@@ -22,13 +22,14 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.das.proyectodas.db.AppDatabase;
 import com.das.proyectodas.db.Ropa;
 
 import java.io.File;
 import java.util.List;
 
-// Este es el adaptador para mostrar cada prenda en la lista
+// Adaptador para mostrar cada prenda en la lista
 public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder> {
     private List<Ropa> listaRopa;
 
@@ -50,24 +51,28 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
         Context context = holder.itemView.getContext();
         holder.nombre.setText(item.getNombre());
 
-        // Aquí cargamos la imagen: primero miramos si es una foto de la cámara
+        // Prioridad de carga de imagen
         if (item.getImagenUri() != null && !item.getImagenUri().isEmpty()) {
-            File imgFile = new File(item.getImagenUri());
-            if (imgFile.exists()) {
-                holder.imagen.setImageURI(Uri.fromFile(imgFile));
-            } else {
-                holder.imagen.setImageResource(R.drawable.ic_launcher_background);
-            }
-        } 
-        // Si no, miramos si es una de las de prueba por nombre
-        else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
+            // Carga desde archivo local (cámara) con Glide
+            Glide.with(context)
+                    .load(new File(item.getImagenUri()))
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.ic_launcher_background)
+                    .into(holder.imagen);
+        } else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
+            // Carga desde recursos drawable por nombre
             int resId = context.getResources().getIdentifier(item.getImagenNombre(), "drawable", context.getPackageName());
-            holder.imagen.setImageResource(resId != 0 ? resId : R.drawable.ic_launcher_background);
-        } 
-        // Si falla, ponemos una por defecto
-        else {
-            int idImagen = item.getImagenResId();
-            holder.imagen.setImageResource(idImagen != 0 ? idImagen : R.drawable.ic_launcher_background);
+            Glide.with(context)
+                    .load(resId != 0 ? resId : R.drawable.ic_launcher_background)
+                    .into(holder.imagen);
+        } else {
+            // Carga desde URL remota o fallback
+            String urlRemota = "http://34.175.220.9:81/get_imagen.php?id=" + item.getNombre();
+            Glide.with(context)
+                    .load(urlRemota)
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.ic_launcher_background)
+                    .into(holder.imagen);
         }
 
         // Lógica para el botón de favoritos (la estrella)
@@ -115,7 +120,7 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
     private void lanzarNotificacionOutfit(Context context, Ropa item, String dia) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra("notificacion_id", 1001);
-        
+
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags |= PendingIntent.FLAG_IMMUTABLE;

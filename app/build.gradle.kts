@@ -4,8 +4,7 @@ plugins {
 
 android {
     namespace = "com.das.proyectodas"
-    compileSdk =35;
-
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.das.proyectodas"
@@ -40,24 +39,27 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
 
-    // Navegación (Asegúrate de que coincidan con las del catálogo o úsalas directamente)
+    // Navegación
     implementation("androidx.navigation:navigation-ui:2.8.5")
     implementation("androidx.navigation:navigation-fragment:2.8.5")
 
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
 
-    // GSON para leer tu archivo JSON de prueba
+    // GSON
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // SOLUCIÓN AL ERROR DE METADATOS: Fuerza la versión compatible
+    // SOLUCIÓN AL ERROR DE METADATOS
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.9.0")
 
-    // Room: Usando las referencias que creamos en el TOML
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-common:2.6.1")
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.common)
+    annotationProcessor(libs.room.compiler)
 
+    // Glide
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
 
     implementation("com.android.volley:volley:1.2.1")
 
