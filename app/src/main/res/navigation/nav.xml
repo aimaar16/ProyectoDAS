@@ -3,7 +3,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav"
-    app:startDestination="@id/fragment_inicio">
+    app:startDestination="@id/fragment_login">
+
+    <fragment
+        android:id="@+id/fragment_login"
+        android:name="com.das.proyectodas.LoginFragment"
+        android:label="Login"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/action_login_to_inicio"
+            app:destination="@id/fragment_inicio"
+            app:popUpTo="@id/nav"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_login_to_registro"
+            app:destination="@id/fragment_registro" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_registro"
+        android:name="com.das.proyectodas.RegistroFragment"
+        android:label="Registro"
+        tools:layout="@layout/fragment_registro">
+        <action
+            android:id="@+id/action_registro_to_login"
+            app:destination="@id/fragment_login" />
+    </fragment>
 
     <fragment
         android:id="@+id/fragment_armario"
