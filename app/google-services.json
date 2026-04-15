@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1066190838588",
+    "project_id": "proyectodasaimar-b5db2",
+    "storage_bucket": "proyectodasaimar-b5db2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066190838588:android:c6d3ad1275d52004795c39",
+        "android_client_info": {
+          "package_name": "com.das.proyectodas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKKpxhyGDWbvxBJ8FpTRg7mTF6zNtBB1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

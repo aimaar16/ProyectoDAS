@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -32,6 +33,9 @@ android {
 }
 
 dependencies {
+
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation("com.google.firebase:firebase-analytics")
     // Librerías base del catálogo TOML
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -55,6 +59,7 @@ dependencies {
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.common)
+    implementation(libs.firebase.storage)
     annotationProcessor(libs.room.compiler)
 
     // Glide

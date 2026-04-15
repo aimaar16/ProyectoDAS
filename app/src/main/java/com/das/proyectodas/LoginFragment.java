@@ -1,5 +1,6 @@
 package com.das.proyectodas;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,7 +30,7 @@ public class LoginFragment extends Fragment {
     private TextView tvGoToRegister;
 
     // IP de tu instancia en Google Cloud
-    private static final String URL_LOGIN = "http://34.175.220.9:81/login.php";
+    private static final String URL_LOGIN = "http://34.175.147.84:81/login.php";
 
     @Nullable
     @Override
@@ -43,8 +44,8 @@ public class LoginFragment extends Fragment {
 
         btnLogin.setOnClickListener(v -> loginUsuario());
 
-        tvGoToRegister.setOnClickListener(v -> 
-            Navigation.findNavController(v).navigate(R.id.action_login_to_registro)
+        tvGoToRegister.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.action_login_to_registro)
         );
 
         return view;
@@ -63,13 +64,21 @@ public class LoginFragment extends Fragment {
                 response -> {
                     // El servidor debe devolver "OK" si el login es correcto
                     if (response.trim().equalsIgnoreCase("OK")) {
+
+                        // 🔥 GUARDAR USERNAME PARA USARLO EN FIREBASE
+                        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+                        prefs.edit().putString("username", usuario).apply();
+
                         Toast.makeText(getContext(), "Bienvenido " + usuario, Toast.LENGTH_SHORT).show();
+
                         Navigation.findNavController(requireView()).navigate(R.id.action_login_to_inicio);
+
                     } else {
                         Toast.makeText(getContext(), "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> Toast.makeText(getContext(), "Error de conexión: " + error.getMessage(), Toast.LENGTH_SHORT).show()) {
+
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
