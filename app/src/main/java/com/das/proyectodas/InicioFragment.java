@@ -2,6 +2,7 @@ package com.das.proyectodas;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
@@ -58,9 +60,23 @@ public class InicioFragment extends Fragment {
                 }
         );
 
-        imgPerfil.setOnClickListener(v -> abrirCamara());
+        imgPerfil.setOnClickListener(v -> verificarPermisosYAbrirCamara());
 
         return view;
+    }
+    // Permisos para la cámara como en el Armario Fragment
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) abrirCamara();
+                else Toast.makeText(getContext(), "Permiso de cámara denegado", Toast.LENGTH_SHORT).show();
+            });
+    private void verificarPermisosYAbrirCamara() {
+        if (requireContext().checkSelfPermission(android.Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            abrirCamara();
+        } else {
+            requestPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+        }
     }
 
     private void abrirCamara() {
@@ -88,10 +104,17 @@ public class InicioFragment extends Fragment {
 
         StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
-                    Glide.with(this).load(response).into(imgPerfil);
+                    String urlSinCache = response + "?t=" + System.currentTimeMillis();
+
+                    Glide.with(this)
+                            .load(urlSinCache)
+                            .skipMemoryCache(true)
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .circleCrop()
+                            .into(imgPerfil);
 
                     SharedPreferences prefsFoto = requireContext().getSharedPreferences("perfil", getContext().MODE_PRIVATE);
-                    prefsFoto.edit().putString("url_foto_" + username, response).apply();
+                    prefsFoto.edit().putString("url_foto_" + username, urlSinCache).apply();
 
                     Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
                 },
@@ -119,7 +142,12 @@ public class InicioFragment extends Fragment {
         String url = prefsFoto.getString("url_foto_" + username, null);
 
         if (url != null) {
-            Glide.with(this).load(url).into(imgPerfil);
+            Glide.with(this)
+                    .load(url)
+                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .circleCrop()
+                    .into(imgPerfil);
             return;
         }
 
@@ -128,7 +156,13 @@ public class InicioFragment extends Fragment {
                 "http://34.175.220.9:81/obtenerFotoPerfil.php",
                 response -> {
                     if (!response.equals("NO_FOTO")) {
-                        Glide.with(this).load(response).into(imgPerfil);
+                        String urlSinCache = response + "?t=" + System.currentTimeMillis();
+
+                        Glide.with(this)
+                                .load(urlSinCache)
+                                .skipMemoryCache(true)
+                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                .into(imgPerfil);
 
                         prefsFoto.edit().putString("url_foto_" + username, response).apply();
                     }
