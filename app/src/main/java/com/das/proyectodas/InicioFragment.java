@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +19,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class InicioFragment extends Fragment {
 
@@ -39,8 +42,8 @@ public class InicioFragment extends Fragment {
 
         imgPerfil = view.findViewById(R.id.imgPerfil);
 
-        // Cargar foto desde Firebase si existe
-        cargarFotoDesdeFirebase();
+        // Cargar foto desde tu servidor
+        cargarFotoDesdeServidor();
 
         // Inicializar cámara
         takePictureLauncher = registerForActivityResult(
@@ -50,8 +53,7 @@ public class InicioFragment extends Fragment {
                         Bitmap foto = (Bitmap) result.getData().getExtras().get("data");
                         imgPerfil.setImageBitmap(foto);
 
-                        guardarFotoLocal(foto);
-                        subirFotoFirebase(foto);
+                        subirFotoPerfil(foto);
                     }
                 }
         );
@@ -66,46 +68,50 @@ public class InicioFragment extends Fragment {
         takePictureLauncher.launch(intent);
     }
 
-    private void guardarFotoLocal(Bitmap bitmap) {
-        File file = new File(requireContext().getFilesDir(), "foto_perfil.jpg");
-
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Error guardando foto local", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void subirFotoFirebase(Bitmap bitmap) {
+    private void subirFotoPerfil(Bitmap bitmap) {
 
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
-        String username = prefs.getString("username", "default");
+        String username = prefs.getString("username", null);
 
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference ref = storage.getReference().child("perfiles/" + username + "/foto.jpg");
+        Log.d("FOTO", "Username enviado: " + username);
+
+        if (username == null) {
+            Toast.makeText(getContext(), "Error: username no encontrado", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-        byte[] data = baos.toByteArray();
+        String imagenBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
 
-        ref.putBytes(data)
-                .addOnSuccessListener(task -> ref.getDownloadUrl().addOnSuccessListener(uri -> {
-                    String url = uri.toString();
+        String url = "http://34.175.220.9:81/subirFotoPerfil.php";
 
-                    // Guardar URL en SharedPreferences
-                    SharedPreferences prefs2 = requireContext().getSharedPreferences("perfil", getContext().MODE_PRIVATE);
-                    prefs2.edit().putString("url_foto_" + username, url).apply();
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Glide.with(this).load(response).into(imgPerfil);
 
+                    SharedPreferences prefsFoto = requireContext().getSharedPreferences("perfil", getContext().MODE_PRIVATE);
+                    prefsFoto.edit().putString("url_foto_" + username, response).apply();
 
-                    Toast.makeText(getContext(), "Foto subida a Firebase", Toast.LENGTH_SHORT).show();
-                }))
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Error subiendo foto a Firebase", Toast.LENGTH_SHORT).show()
-                );
+                    Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
+                },
+                error -> Toast.makeText(getContext(), "Error subiendo foto", Toast.LENGTH_SHORT).show()
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("username", username);
+                params.put("imagen", imagenBase64);
+                return params;
+            }
+        };
+
+        Volley.newRequestQueue(requireContext()).add(request);
     }
 
-    private void cargarFotoDesdeFirebase() {
-        SharedPreferences prefs = requireContext().getSharedPreferences("perfil", getContext().MODE_PRIVATE);
+
+    private void cargarFotoDesdeServidor() {
+
         SharedPreferences prefsUser = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
         String username = prefsUser.getString("username", null);
 
@@ -113,12 +119,30 @@ public class InicioFragment extends Fragment {
         String url = prefsFoto.getString("url_foto_" + username, null);
 
         if (url != null) {
-            new Thread(() -> {
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeStream(new java.net.URL(url).openStream());
-                    requireActivity().runOnUiThread(() -> imgPerfil.setImageBitmap(bitmap));
-                } catch (Exception ignored) {}
-            }).start();
+            Glide.with(this).load(url).into(imgPerfil);
+            return;
         }
+
+        // Si no hay foto guardada, pedirla al servidor
+        StringRequest request = new StringRequest(Request.Method.POST,
+                "http://34.175.220.9:81/obtenerFotoPerfil.php",
+                response -> {
+                    if (!response.equals("NO_FOTO")) {
+                        Glide.with(this).load(response).into(imgPerfil);
+
+                        prefsFoto.edit().putString("url_foto_" + username, response).apply();
+                    }
+                },
+                error -> {}
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("username", username);
+                return params;
+            }
+        };
+
+        Volley.newRequestQueue(requireContext()).add(request);
     }
 }

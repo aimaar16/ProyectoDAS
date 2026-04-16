@@ -3,6 +3,8 @@ package com.das.proyectodas;
 import static android.app.Activity.RESULT_OK;
 
 import android.Manifest;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,7 +17,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-import android.content.Intent;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -27,37 +28,34 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.das.proyectodas.db.AppDatabase;
 import com.das.proyectodas.db.Ropa;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ArmarioFragment extends Fragment {
-
-    private FirebaseStorage storage;
-    private StorageReference storageRef;
 
     private RecyclerView recyclerView;
     private Button btnAnadir, btnEliminar;
     private List<Ropa> listaActualRopa = new ArrayList<>();
 
-    // Launcher cámara
+    // Cámara
     private ActivityResultLauncher<Intent> takePictureLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Bundle bundle = result.getData().getExtras();
-                    Bitmap miniatura = (Bitmap) bundle.get("data");
+                    Bitmap miniatura = (Bitmap) result.getData().getExtras().get("data");
                     mostrarDialogoNuevaRopa(miniatura);
                 }
             });
@@ -66,10 +64,6 @@ public class ArmarioFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_armario, container, false);
-
-        // 🔥 Inicializar Firebase Storage
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference();
 
         recyclerView = root.findViewById(R.id.recyclerArmario);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
@@ -85,6 +79,9 @@ public class ArmarioFragment extends Fragment {
         return root;
     }
 
+    // -------------------------
+    // CARGAR DATOS
+    // -------------------------
     private void cargarDatos() {
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
@@ -97,6 +94,7 @@ public class ArmarioFragment extends Fragment {
             }
 
             listaActualRopa = listaDB;
+
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     RopaAdapter adapter = new RopaAdapter(listaActualRopa);
@@ -105,6 +103,23 @@ public class ArmarioFragment extends Fragment {
             }
         }).start();
     }
+
+    private List<Ropa> cargarRopaDesdeJSON() {
+        try {
+            InputStream is = requireContext().getAssets().open("ropa_prueba.json");
+            byte[] buffer = new byte[is.available()];
+            is.read(buffer);
+            is.close();
+            String json = new String(buffer, StandardCharsets.UTF_8);
+            return new Gson().fromJson(json, new TypeToken<List<Ropa>>() {}.getType());
+        } catch (IOException ex) {
+            return new ArrayList<>();
+        }
+    }
+
+    // -------------------------
+    // ELIMINAR ROPA
+    // -------------------------
     private void mostrarOpcionesEliminar() {
         String[] opciones = {"Borrar una prenda", "Vaciar armario completo"};
 
@@ -116,6 +131,7 @@ public class ArmarioFragment extends Fragment {
                 })
                 .show();
     }
+
     private void mostrarDialogoElegirUna() {
         if (listaActualRopa.isEmpty()) {
             Toast.makeText(getContext(), "No hay prendas para eliminar", Toast.LENGTH_SHORT).show();
@@ -132,15 +148,15 @@ public class ArmarioFragment extends Fragment {
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
+
     private void eliminarPrendaEspecifica(Ropa ropa) {
         new Thread(() -> {
-            AppDatabase db = AppDatabase.getDatabase(getContext());
-            db.ropaDao().eliminarPrenda(ropa);
-
+            AppDatabase.getDatabase(getContext()).ropaDao().eliminarPrenda(ropa);
             if (getActivity() != null)
                 getActivity().runOnUiThread(this::cargarDatos);
         }).start();
     }
+
     private void mostrarDialogoConfirmarTodo() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Eliminar toda la ropa")
@@ -152,27 +168,15 @@ public class ArmarioFragment extends Fragment {
 
     private void vaciarArmario() {
         new Thread(() -> {
-            AppDatabase db = AppDatabase.getDatabase(getContext());
-            db.ropaDao().eliminarTodaLaRopa();
-
+            AppDatabase.getDatabase(getContext()).ropaDao().eliminarTodaLaRopa();
             if (getActivity() != null)
                 getActivity().runOnUiThread(this::cargarDatos);
         }).start();
     }
 
-
-
-    private List<Ropa> cargarRopaDesdeJSON() {
-        try {
-            InputStream is = requireContext().getAssets().open("ropa_prueba.json");
-            byte[] buffer = new byte[is.available()];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, StandardCharsets.UTF_8);
-            return new Gson().fromJson(json, new TypeToken<List<Ropa>>() {}.getType());
-        } catch (IOException ex) { return new ArrayList<>(); }
-    }
-
+    // -------------------------
+    // AÑADIR ROPA
+    // -------------------------
     private void verificarPermisosYAbrirCamara() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
             abrirCamara();
@@ -206,41 +210,62 @@ public class ArmarioFragment extends Fragment {
             String categoria = spinnerCat.getSelectedItem().toString();
             boolean esFav = checkFav.isChecked();
 
-            subirImagenAFirebase(bitmap, nombre, categoria, esFav);
+            subirRopaAlServidor(bitmap, nombre, categoria, esFav);
         });
 
         builder.setNegativeButton("Cancelar", null).show();
     }
 
-    // 🔥 Subida REAL a Firebase Storage + guardado en BD
-    private void subirImagenAFirebase(Bitmap foto, String nombre, String categoria, boolean esFav) {
+    // -------------------------
+    // SUBIR ROPA AL SERVIDOR PHP
+    // -------------------------
+    private void subirRopaAlServidor(Bitmap foto, String nombre, String categoria, boolean esFav) {
 
+        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+
+        if (username == null) {
+            Toast.makeText(getContext(), "Error: usuario no encontrado", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Convertir imagen a Base64
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         foto.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-        byte[] data = baos.toByteArray();
+        String imagenBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
 
-        StorageReference fileRef = storageRef.child("ropa/" + nombre + "_" + System.currentTimeMillis() + ".jpg");
+        String url = "http://34.175.220.9:81/subirRopa.php";
 
-        fileRef.putBytes(data)
-                .addOnSuccessListener(taskSnapshot ->
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
 
-                            String urlFirebase = uri.toString();
+                    Ropa r = new Ropa(nombre, categoria, 0, esFav);
+                    r.setImagenUri(response);
 
-                            Ropa r = new Ropa(nombre, categoria, 0, esFav);
-                            r.setImagenUri(urlFirebase);
+                    new Thread(() -> {
+                        AppDatabase.getDatabase(getContext()).ropaDao().insertarPrenda(r);
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(getContext(), "Prenda subida correctamente", Toast.LENGTH_SHORT).show();
+                            cargarDatos();
+                        });
+                    }).start();
+                },
+                error -> Toast.makeText(getContext(), "Error subiendo prenda", Toast.LENGTH_SHORT).show()
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("username", username);
+                params.put("nombre", nombre);
+                params.put("categoria", categoria);
+                params.put("imagenNombre", nombre);
+                params.put("esFavorito", esFav ? "1" : "0");
+                params.put("diaSemana", "");
+                params.put("imagen", imagenBase64);
+                return params;
+            }
+        };
 
-                            new Thread(() -> {
-                                AppDatabase.getDatabase(getContext()).ropaDao().insertarPrenda(r);
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getContext(), "Imagen subida y guardada", Toast.LENGTH_SHORT).show();
-                                    cargarDatos();
-                                });
-                            }).start();
-                        })
-                )
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Error al subir: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+        Volley.newRequestQueue(requireContext()).add(request);
     }
 }
