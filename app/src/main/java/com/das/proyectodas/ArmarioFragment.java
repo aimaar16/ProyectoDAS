@@ -88,12 +88,6 @@ public class ArmarioFragment extends Fragment {
             AppDatabase db = AppDatabase.getDatabase(getContext());
             List<Ropa> listaDB = db.ropaDao().obtenerTodaLaRopa();
 
-            if (listaDB.isEmpty()) {
-                List<Ropa> listaJson = cargarRopaDesdeJSON();
-                for (Ropa r : listaJson) db.ropaDao().insertarPrenda(r);
-                listaDB = db.ropaDao().obtenerTodaLaRopa();
-            }
-
             listaActualRopa = listaDB;
 
             if (getActivity() != null) {
@@ -103,19 +97,6 @@ public class ArmarioFragment extends Fragment {
                 });
             }
         }).start();
-    }
-
-    private List<Ropa> cargarRopaDesdeJSON() {
-        try {
-            InputStream is = requireContext().getAssets().open("ropa_prueba.json");
-            byte[] buffer = new byte[is.available()];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, StandardCharsets.UTF_8);
-            return new Gson().fromJson(json, new TypeToken<List<Ropa>>() {}.getType());
-        } catch (IOException ex) {
-            return new ArrayList<>();
-        }
     }
 
     // -------------------------
@@ -151,12 +132,39 @@ public class ArmarioFragment extends Fragment {
     }
 
     private void eliminarPrendaEspecifica(Ropa ropa) {
-        new Thread(() -> {
-            AppDatabase.getDatabase(getContext()).ropaDao().eliminarPrenda(ropa);
-            if (getActivity() != null)
-                getActivity().runOnUiThread(this::cargarDatos);
-        }).start();
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+
+        String url = "http://34.175.220.9:81/eliminarRopa.php";
+
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+
+                    // Borrar de Room
+                    new Thread(() -> {
+                        AppDatabase.getDatabase(getContext()).ropaDao().eliminarPrenda(ropa);
+
+                        if (getActivity() != null)
+                            getActivity().runOnUiThread(this::cargarDatos);
+                    }).start();
+
+                },
+                error -> Toast.makeText(getContext(), "Error eliminando en servidor", Toast.LENGTH_SHORT).show()
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("id", String.valueOf(ropa.getId()));
+                params.put("username", username);
+                return params;
+            }
+        };
+
+        Volley.newRequestQueue(requireContext()).add(request);
     }
+
+
 
     private void mostrarDialogoConfirmarTodo() {
         new AlertDialog.Builder(requireContext())
@@ -168,12 +176,37 @@ public class ArmarioFragment extends Fragment {
     }
 
     private void vaciarArmario() {
-        new Thread(() -> {
-            AppDatabase.getDatabase(getContext()).ropaDao().eliminarTodaLaRopa();
-            if (getActivity() != null)
-                getActivity().runOnUiThread(this::cargarDatos);
-        }).start();
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+
+        String url = "http://34.175.220.9:81/vaciarArmario.php";
+
+        StringRequest request = new StringRequest(Request.Method.POST, url,
+                response -> {
+
+                    // Borrar en Room
+                    new Thread(() -> {
+                        AppDatabase.getDatabase(getContext()).ropaDao().eliminarTodaLaRopa();
+
+                        if (getActivity() != null)
+                            getActivity().runOnUiThread(this::cargarDatos);
+                    }).start();
+
+                },
+                error -> Toast.makeText(getContext(), "Error al vaciar en servidor", Toast.LENGTH_SHORT).show()
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("username", username);
+                return params;
+            }
+        };
+
+        Volley.newRequestQueue(requireContext()).add(request);
     }
+
 
     // -------------------------
     // AÑADIR ROPA
