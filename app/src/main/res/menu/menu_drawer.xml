@@ -6,6 +6,10 @@
     <item android:title="@string/menu_home">
         <menu>
             <item
+                android:id="@+id/fragment_inicio"
+                android:title="Inicio"
+                android:icon="@drawable/ic_home" />
+            <item
                 android:id="@+id/fragment_armario"
                 android:icon="@drawable/ic_armario"
                 android:title="@string/menu_closet">
@@ -25,4 +29,8 @@
                 android:title="@string/title_favoritos" />
         </menu>
     </item>
+    <item
+        android:id="@+id/fragment_login"
+        android:title="Cerrar sesión"
+        android:icon="@drawable/ic_logout" />
 </menu>

@@ -74,6 +74,22 @@ public class MainActivity extends AppCompatActivity {
             NavigationView navigationView = findViewById(R.id.nav_view);
             navigationView.setItemIconTintList(null); // Para que los iconos se vean con sus colores
             NavigationUI.setupWithNavController(navigationView, navController);
+            navigationView.setNavigationItemSelectedListener(item -> {
+                if (item.getItemId() == R.id.fragment_login) {
+                    cerrarSesion();
+                    DrawerLayout drawer = findViewById(R.id.drawer_layout);
+                    drawer.closeDrawers();
+                    return true;
+                }
+
+                // Para los demás items, dejar que NavigationUI lo gestione
+                boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
+
+                DrawerLayout drawer = findViewById(R.id.drawer_layout);
+                drawer.closeDrawers();
+
+                return handled;
+            });
         }
 
         // Controlamos el botón de atrás del móvil
@@ -151,4 +167,12 @@ public class MainActivity extends AppCompatActivity {
         getResources().updateConfiguration(config, getResources().getDisplayMetrics());
         recreate(); // Recargamos la actividad
     }
+
+    private void cerrarSesion() {
+        getSharedPreferences("usuario", MODE_PRIVATE).edit().clear().apply();
+        getSharedPreferences("perfil", MODE_PRIVATE).edit().clear().apply();
+
+        navController.navigate(R.id.fragment_login);
+    }
+
 }
