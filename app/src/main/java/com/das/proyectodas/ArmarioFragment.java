@@ -68,7 +68,8 @@ public class ArmarioFragment extends Fragment {
         recyclerView = root.findViewById(R.id.recyclerArmario);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
-        cargarDatos();
+        sincronizarRopaDesdeServidor();
+
 
         btnAnadir = root.findViewById(R.id.btnAnadirRopa);
         btnAnadir.setOnClickListener(v -> verificarPermisosYAbrirCamara());
@@ -268,4 +269,49 @@ public class ArmarioFragment extends Fragment {
 
         Volley.newRequestQueue(requireContext()).add(request);
     }
+
+    private void sincronizarRopaDesdeServidor() {
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+
+        if (username == null) return;
+
+        String url = "http://34.175.220.9:81/listarRopa.php?username=" + username;
+
+        StringRequest request = new StringRequest(Request.Method.GET, url,
+                response -> {
+
+                    try {
+                        Gson gson = new Gson();
+                        java.lang.reflect.Type listType = new TypeToken<List<Ropa>>(){}.getType();
+                        List<Ropa> ropaServidor = gson.fromJson(response, listType);
+
+                        new Thread(() -> {
+                            AppDatabase db = AppDatabase.getDatabase(getContext());
+
+                            // Borrar ropa local y reemplazarla por la del servidor
+                            db.ropaDao().eliminarTodaLaRopa();
+
+                            for (Ropa r : ropaServidor) {
+                                db.ropaDao().insertarPrenda(r);
+                            }
+
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(this::cargarDatos);
+                            }
+
+                        }).start();
+
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(), "Error procesando datos del servidor", Toast.LENGTH_SHORT).show();
+                    }
+
+                },
+                error -> Toast.makeText(getContext(), "Error conectando al servidor", Toast.LENGTH_SHORT).show()
+        );
+
+        Volley.newRequestQueue(requireContext()).add(request);
+    }
+
 }

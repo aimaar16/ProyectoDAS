@@ -51,31 +51,29 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
         Context context = holder.itemView.getContext();
         holder.nombre.setText(item.getNombre());
 
-        // Prioridad de carga de imagen
+        // 1. Cargar imagen REMOTA desde servidor
         if (item.getImagenUri() != null && !item.getImagenUri().isEmpty()) {
-            // Carga desde archivo local (cámara) con Glide
             Glide.with(context)
-                    .load(new File(item.getImagenUri()))
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.ic_launcher_background)
-                    .into(holder.imagen);
-        } else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
-            // Carga desde recursos drawable por nombre
-            int resId = context.getResources().getIdentifier(item.getImagenNombre(), "drawable", context.getPackageName());
-            Glide.with(context)
-                    .load(resId != 0 ? resId : R.drawable.ic_launcher_background)
-                    .into(holder.imagen);
-        } else {
-            // Carga desde URL remota o fallback
-            String urlRemota = "http://34.175.220.9:81/get_imagen.php?id=" + item.getNombre();
-            Glide.with(context)
-                    .load(urlRemota)
+                    .load(item.getImagenUri())   // ✔ URL remota
                     .placeholder(R.drawable.ic_launcher_background)
                     .error(R.drawable.ic_launcher_background)
                     .into(holder.imagen);
         }
+        // 2. Cargar imagen desde drawable
+        else if (item.getImagenNombre() != null && !item.getImagenNombre().isEmpty()) {
+            int resId = context.getResources().getIdentifier(item.getImagenNombre(), "drawable", context.getPackageName());
+            Glide.with(context)
+                    .load(resId != 0 ? resId : R.drawable.ic_launcher_background)
+                    .into(holder.imagen);
+        }
+        // 3. Fallback
+        else {
+            Glide.with(context)
+                    .load(R.drawable.ic_launcher_background)
+                    .into(holder.imagen);
+        }
 
-        // Lógica para el botón de favoritos (la estrella)
+        // Favoritos
         holder.btnFavorito.setImageResource(item.isEsFavorito() ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
         holder.btnFavorito.setOnClickListener(v -> {
             item.setEsFavorito(!item.isEsFavorito());
@@ -86,11 +84,10 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
             }).start();
         });
 
-        // Botón para elegir qué día te vas a poner la ropa
-        holder.btnOutfit.setOnClickListener(v -> {
-            mostrarDialogoSeleccionarDia(context, item);
-        });
+        // Día de la semana
+        holder.btnOutfit.setOnClickListener(v -> mostrarDialogoSeleccionarDia(context, item));
     }
+
 
     // Ventana que sale para elegir el día de la semana
     private void mostrarDialogoSeleccionarDia(Context context, Ropa item) {
@@ -100,7 +97,7 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
                 .setItems(dias, (dialog, which) -> {
                     String diaSeleccionado = dias[which];
                     item.setDiaSemana(diaSeleccionado);
-                    
+
                     new Thread(() -> {
                         AppDatabase.getDatabase(context).ropaDao().actualizarPrenda(item);
                         if (context instanceof MainActivity) {
