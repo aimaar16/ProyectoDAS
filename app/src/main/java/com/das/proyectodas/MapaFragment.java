@@ -155,5 +155,10 @@ public class MapaFragment extends Fragment {
 
         Volley.newRequestQueue(requireContext()).add(request);
     }
+    // Obtenemos nombre del usuario para mostrarlo en el mapa
+    public String getUsername() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", MODE_PRIVATE);
+        return prefs.getString("username", "Usuario");
+    }
 
 }

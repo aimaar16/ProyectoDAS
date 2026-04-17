@@ -29,12 +29,14 @@ public class MiMapaEventsReceiver implements org.osmdroid.events.MapEventsReceiv
             map.getOverlays().remove(marcadorActual);
         }
 
-        // 2. Crear nuevo marcador
+        // 2. Crear nuevo marcador con nombre del usuario
+        String username = fragment.getUsername();
         marcadorActual = new Marker(map);
         marcadorActual.setPosition(p);
         marcadorActual.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        marcadorActual.setTitle("Ubicación seleccionada");
+        marcadorActual.setTitle(username);
         map.getOverlays().add(marcadorActual);
+
 
         map.invalidate();
 
@@ -43,13 +45,8 @@ public class MiMapaEventsReceiver implements org.osmdroid.events.MapEventsReceiv
 
         return true;
     }
-
     @Override
     public boolean longPressHelper(GeoPoint p) {
         return false;
-    }
-
-    private void subirUbicacionAlServidor(double lat, double lon) {
-        subirUbicacionAlServidor(lat, lon);
     }
 }
