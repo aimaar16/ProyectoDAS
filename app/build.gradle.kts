@@ -72,5 +72,18 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    // OpenStreetMap
+    implementation("org.osmdroid:osmdroid-android:6.1.16") {
+        exclude(group = "com.j256.ormlite", module = "ormlite-core")
+    }
+    implementation("org.osmdroid:osmdroid-wms:6.1.16") {
+        exclude(group = "com.j256.ormlite", module = "ormlite-core")
+    }
+    implementation("org.osmdroid:osmdroid-mapsforge:6.1.16") {
+        exclude(group = "com.j256.ormlite", module = "ormlite-core")
+    }
+    implementation("org.osmdroid:osmdroid-geopackage:6.1.16") {
+        exclude(group = "com.j256.ormlite", module = "ormlite-core")
+    }
     implementation("com.google.android.gms:play-services-location:21.3.0")
 }

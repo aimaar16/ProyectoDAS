@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Aquí cambiamos el idioma de verdad y reiniciamos la pantalla para que cambien los textos
+    // Aquí cambiamos el idioma y reiniciamos la pantalla para que cambien los textos
     private void cambiarIdioma(String codigoIdioma) {
         Locale locale = new Locale(codigoIdioma);
         Locale.setDefault(locale);

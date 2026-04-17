@@ -80,9 +80,8 @@ public class ArmarioFragment extends Fragment {
         return root;
     }
 
-    // -------------------------
+
     // CARGAR DATOS
-    // -------------------------
     private void cargarDatos() {
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
@@ -99,9 +98,8 @@ public class ArmarioFragment extends Fragment {
         }).start();
     }
 
-    // -------------------------
-    // ELIMINAR ROPA
-    // -------------------------
+
+    // OPCIONES ELIMINAR ROPA
     private void mostrarOpcionesEliminar() {
         String[] opciones = {"Borrar una prenda", "Vaciar armario completo"};
 
@@ -114,6 +112,7 @@ public class ArmarioFragment extends Fragment {
                 .show();
     }
 
+    //  DIALOGO AL ELIMINAR
     private void mostrarDialogoElegirUna() {
         if (listaActualRopa.isEmpty()) {
             Toast.makeText(getContext(), "No hay prendas para eliminar", Toast.LENGTH_SHORT).show();
@@ -130,6 +129,8 @@ public class ArmarioFragment extends Fragment {
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
+
+    // ELIMINAR ROPA
 
     private void eliminarPrendaEspecifica(Ropa ropa) {
 
@@ -165,7 +166,7 @@ public class ArmarioFragment extends Fragment {
     }
 
 
-
+    // DIALOGO AL ELIMINAR TODA LA ROPA
     private void mostrarDialogoConfirmarTodo() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Eliminar toda la ropa")
@@ -175,6 +176,7 @@ public class ArmarioFragment extends Fragment {
                 .show();
     }
 
+    // VACIAR EL ARMARIO, ELIMINA TODA LA ROPA
     private void vaciarArmario() {
 
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
@@ -207,10 +209,8 @@ public class ArmarioFragment extends Fragment {
         Volley.newRequestQueue(requireContext()).add(request);
     }
 
-
-    // -------------------------
     // AÑADIR ROPA
-    // -------------------------
+
     private void verificarPermisosYAbrirCamara() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
             abrirCamara();
@@ -223,11 +223,14 @@ public class ArmarioFragment extends Fragment {
         takePictureLauncher.launch(intent);
     }
 
+    // GESTIÓN DE PERMISOS PARA LA CÁMARA
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) abrirCamara();
             });
 
+
+    // DIALOGO AL AÑADIR NUEVA ROPA
     private void mostrarDialogoNuevaRopa(Bitmap bitmap) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Nueva Prenda");
@@ -250,9 +253,8 @@ public class ArmarioFragment extends Fragment {
         builder.setNegativeButton("Cancelar", null).show();
     }
 
-    // -------------------------
     // SUBIR ROPA AL SERVIDOR PHP
-    // -------------------------
+
     private void subirRopaAlServidor(Bitmap foto, String nombre, String categoria, boolean esFav) {
 
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
@@ -302,6 +304,8 @@ public class ArmarioFragment extends Fragment {
 
         Volley.newRequestQueue(requireContext()).add(request);
     }
+
+    // OBTENEMOS LA ROPA ALMACENADA EN EL SERVIDOR
 
     private void sincronizarRopaDesdeServidor() {
 
