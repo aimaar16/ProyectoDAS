@@ -23,6 +23,19 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.ProyectoDAS"
         tools:replace="android:allowBackup">
+
+        <receiver
+            android:name="com.das.proyectodas.WidgetFavoritaAleatoria"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_favorita_aleatoria_info" />
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

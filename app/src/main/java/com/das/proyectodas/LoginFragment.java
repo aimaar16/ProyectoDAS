@@ -1,6 +1,9 @@
 package com.das.proyectodas;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,35 +55,49 @@ public class LoginFragment extends Fragment {
     }
 
     private void loginUsuario() {
-        // Inicializar los campos
+
         String usuario = Usuario.getText().toString().trim();
         String password = Contraseña.getText().toString().trim();
 
-        // Comprobamos que no estén vacíos
         if (usuario.isEmpty() || password.isEmpty()) {
             Toast.makeText(getContext(), "Rellena todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+        String usuarioGuardado = prefs.getString("username", null);
+
+        //1. Si NO hay internet intentar login offline
+        if (!hayInternet(getContext())) {
+
+            if (usuarioGuardado != null && usuarioGuardado.equals(usuario)) {
+                Toast.makeText(getContext(), "Entrando en modo offline", Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(requireView()).navigate(R.id.action_login_to_inicio);
+                return;
+            } else {
+                Toast.makeText(getContext(), "Sin conexión. No se puede iniciar sesión.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        // 2. Si hay internet → login normal
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_LOGIN,
                 response -> {
-                    // El servidor debe devolver "OK" si el login es correcto
+
                     if (response.trim().equalsIgnoreCase("OK")) {
 
-                        // GUARDAR USERNAME EN SHARED PREFERENCES
-                        SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
+                        // Guardar usuario para futuros accesos offline
                         prefs.edit().putString("username", usuario).apply();
 
                         Toast.makeText(getContext(), "Bienvenido " + usuario, Toast.LENGTH_SHORT).show();
-
                         Navigation.findNavController(requireView()).navigate(R.id.action_login_to_inicio);
 
                     } else {
                         Toast.makeText(getContext(), "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> Toast.makeText(getContext(), "Error de conexión: " + error.getMessage(), Toast.LENGTH_SHORT).show()) {
-
+                error -> Toast.makeText(getContext(), "Error de conexión: " + error.getMessage(), Toast.LENGTH_SHORT).show()
+        ) {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
@@ -92,5 +109,11 @@ public class LoginFragment extends Fragment {
 
         RequestQueue requestQueue = Volley.newRequestQueue(requireContext());
         requestQueue.add(stringRequest);
+    }
+
+    public static boolean hayInternet(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = cm.getActiveNetworkInfo();
+        return info != null && info.isConnected();
     }
 }

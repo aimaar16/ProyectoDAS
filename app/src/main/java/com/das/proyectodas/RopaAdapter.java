@@ -80,6 +80,10 @@ public class RopaAdapter extends RecyclerView.Adapter<RopaAdapter.RopaViewHolder
             new Thread(() -> {
                 AppDatabase db = AppDatabase.getDatabase(context);
                 db.ropaDao().actualizarPrenda(item);
+                
+                // --- CAMBIO AQUÍ: Forzar actualización del widget ---
+                WidgetFavoritaAleatoria.forzarActualizacion(context);
+
                 holder.itemView.post(() -> notifyItemChanged(holder.getAdapterPosition()));
             }).start();
         });
