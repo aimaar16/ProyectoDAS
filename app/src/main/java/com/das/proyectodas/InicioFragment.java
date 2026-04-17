@@ -100,7 +100,7 @@ public class InicioFragment extends Fragment {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
         String imagenBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
 
-        String url = "http://34.175.220.9:81/subirFotoPerfil.php";
+        String url = "http://34.175.196.12:81/subirFotoPerfil.php";
 
         StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
@@ -153,7 +153,7 @@ public class InicioFragment extends Fragment {
 
         // Si no hay foto guardada, pedirla al servidor
         StringRequest request = new StringRequest(Request.Method.POST,
-                "http://34.175.220.9:81/obtenerFotoPerfil.php",
+                "http://34.175.196.12:81/obtenerFotoPerfil.php",
                 response -> {
                     if (!response.equals("NO_FOTO")) {
                         String urlSinCache = response + "?t=" + System.currentTimeMillis();

@@ -29,6 +29,14 @@
                 android:title="@string/title_favoritos" />
         </menu>
     </item>
+    <item android:title="@string/menu_mapa">
+        <menu>
+            <item
+                android:id="@+id/fragment_mapa"
+                android:icon="@drawable/ic_mapa"
+                android:title="@string/title_mapa" />
+        </menu>
+    </item>
     <item
         android:id="@+id/fragment_login"
         android:title="Cerrar sesión"

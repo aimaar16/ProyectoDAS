@@ -137,7 +137,7 @@ public class ArmarioFragment extends Fragment {
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
         String username = prefs.getString("username", null);
 
-        String url = "http://34.175.220.9:81/eliminarRopa.php";
+        String url = "http://34.175.196.12:81/eliminarRopa.php";
 
         StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
@@ -182,7 +182,7 @@ public class ArmarioFragment extends Fragment {
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
         String username = prefs.getString("username", null);
 
-        String url = "http://34.175.220.9:81/vaciarArmario.php";
+        String url = "http://34.175.196.12:81/vaciarArmario.php";
 
         StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
@@ -270,7 +270,7 @@ public class ArmarioFragment extends Fragment {
         foto.compress(Bitmap.CompressFormat.JPEG, 90, baos);
         String imagenBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
 
-        String url = "http://34.175.220.9:81/subirRopa.php";
+        String url = "http://34.175.196.12:81/subirRopa.php";
 
         StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
@@ -314,7 +314,7 @@ public class ArmarioFragment extends Fragment {
 
         if (username == null) return;
 
-        String url = "http://34.175.220.9:81/listarRopa.php?username=" + username;
+        String url = "http://34.175.196.12:81/listarRopa.php?username=" + username;
 
         StringRequest request = new StringRequest(Request.Method.GET, url,
                 response -> {

@@ -4,12 +4,14 @@
     <string name="title_favoritos">Ropa Favorita</string>
     <string name="title_outfit">Mi Outfit</string>
     <string name="title_anadir">Añadir Ropa</string>
+    <string name="title_mapa">Mapa</string>
 
-    <string name="menu_home">Inicio</string>
+    <string name="menu_home">Principal</string>
     <string name="menu_closet">Armario</string>
     <string name="menu_favorites">Favoritos</string>
     <string name="menu_outfit">Outfit</string>
     <string name="menu_add">Añadir</string>
+    <string name="menu_mapa">Especial</string>
 
     <string name="btn_add_clothing">Añadir Ropa</string>
     <string name="btn_delete_clothing">Eliminar Ropa</string>
@@ -28,6 +30,8 @@
     <string name="welcome_title">Bienvenido a Mi Armario DAS</string>
     <string name="welcome_desc">Gestiona tus outfits diarios, crea combinaciones increíbles y organiza tu armario digital de forma sencilla y rápida.</string>
     <string name="no_favorites">Aún no tienes prendas favoritas</string>
+
+
 
     <string-array name="dias_semana">
         <item>Lunes</item>

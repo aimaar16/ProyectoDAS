@@ -28,8 +28,8 @@ public class RegistroFragment extends Fragment {
     private Button btnRegister;
     private TextView tvBackToLogin;
 
-    // URL de tu instancia en Google Cloud con la IP proporcionada
-    private static final String URL_REGISTRO = "http://34.175.220.9:81/registro.php";
+    // IP de mi instancia de Google Cloud
+    private static final String URL_REGISTRO = "http://34.175.196.12:81/registro.php";
 
     @Nullable
     @Override

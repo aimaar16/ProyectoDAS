@@ -4,12 +4,15 @@
     <string name="title_favoritos">Favorite Clothes</string>
     <string name="title_outfit">My Outfit</string>
     <string name="title_anadir">Add Clothing</string>
+    <string name="title_mapa">Map</string>
 
     <string name="menu_home">Home</string>
     <string name="menu_closet">Closet</string>
     <string name="menu_favorites">Favorites</string>
     <string name="menu_outfit">Outfit</string>
     <string name="menu_add">Add</string>
+    <string name="menu_mapa">Special</string>
+
 
     <string name="btn_add_clothing">Add Clothing</string>
     <string name="btn_delete_clothing">Delete Clothing</string>

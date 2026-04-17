@@ -29,8 +29,8 @@ public class LoginFragment extends Fragment {
     private Button btnLogin;
     private TextView tvGoToRegister;
 
-    // IP de tu instancia en Google Cloud
-    private static final String URL_LOGIN = "http://34.175.220.9:81/login.php";
+    // IP de mi servidor Google Cloud
+    private static final String URL_LOGIN = "http://34.175.196.12:81/login.php";
 
     @Nullable
     @Override
@@ -52,9 +52,11 @@ public class LoginFragment extends Fragment {
     }
 
     private void loginUsuario() {
+        // Inicializar los campos
         String usuario = Usuario.getText().toString().trim();
         String password = Contraseña.getText().toString().trim();
 
+        // Comprobamos que no estén vacíos
         if (usuario.isEmpty() || password.isEmpty()) {
             Toast.makeText(getContext(), "Rellena todos los campos", Toast.LENGTH_SHORT).show();
             return;
@@ -65,7 +67,7 @@ public class LoginFragment extends Fragment {
                     // El servidor debe devolver "OK" si el login es correcto
                     if (response.trim().equalsIgnoreCase("OK")) {
 
-                        // 🔥 GUARDAR USERNAME PARA USARLO EN FIREBASE
+                        // GUARDAR USERNAME EN SHARED PREFERENCES
                         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
                         prefs.edit().putString("username", usuario).apply();
 

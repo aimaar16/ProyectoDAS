@@ -51,6 +51,14 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, PERMISSION_CODE);
             }
         }
+        // Permisos de ubicación
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    1001);
+        }
 
         // Configuramos la barra de arriba y el menú lateral
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
