@@ -23,7 +23,7 @@ public class MiMapaEventsReceiver implements org.osmdroid.events.MapEventsReceiv
 
     @Override
     public boolean singleTapConfirmedHelper(GeoPoint p) {
-
+        /*
         // 1. Borrar marcador anterior si existe
         if (marcadorActual != null) {
             map.getOverlays().remove(marcadorActual);
@@ -42,8 +42,10 @@ public class MiMapaEventsReceiver implements org.osmdroid.events.MapEventsReceiv
 
         // 3. Subir al servidor
         fragment.subirUbicacionAlServidor(p.getLatitude(), p.getLongitude());
-
+        */
         return true;
+
+
     }
     @Override
     public boolean longPressHelper(GeoPoint p) {
