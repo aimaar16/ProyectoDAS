@@ -5,10 +5,12 @@ import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -26,9 +28,15 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 // Esta es la clase principal donde se carga menu y navegacion
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +49,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        SharedPreferences prefs = getSharedPreferences("usuario", MODE_PRIVATE);
+        String nombreUsuario = prefs.getString("username", "");
+
+
+        FirebaseMessaging.getInstance().getToken()
+                .addOnSuccessListener(token -> {
+                    Log.d("FCM", "Token: " + token);
+
+                    // Enviar token al servidor
+                    StringRequest request = new StringRequest(Request.Method.POST,
+                            "http://34.175.196.12:81/guardarToken.php",
+                            response -> Log.d("FCM", "Token guardado"),
+                            error -> Log.e("FCM", "Error guardando token"))
+                    {
+                        @Override
+                        protected Map<String, String> getParams() {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("usuario", nombreUsuario);
+                            params.put("token", token);
+                            return params;
+                        }
+                    };
+
+                    Volley.newRequestQueue(this).add(request);
+                });
+
 
         // Llamamos a la función para crear el canal de notificaciones
         createNotificationChannel();

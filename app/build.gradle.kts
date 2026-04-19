@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.common)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.messaging)
     annotationProcessor(libs.room.compiler)
 
     // Glide
