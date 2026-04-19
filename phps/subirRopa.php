@@ -37,6 +37,15 @@ VALUES
 ('$username', '$nombre', '$categoria', 0, '$imagenNombre', '$imagenUri', '$esFavorito', '$diaSemana')";
 
 if (mysqli_query($conexion, $query)) {
+    include 'fcm_send.php';
+    $result = $conexion->query("SELECT token_fcm FROM usuarios WHERE token_fcm IS NOT NULL");
+    while ($row = $result->fetch_assoc()) {
+        enviarNotificacionFCM(
+            $row['token_fcm'],
+            "Nueva prenda añadida",
+            "$username ha añadido ropa nueva"
+        );
+    }
     echo $imagenUri; // Android recibirá la URL final
 } else {
     echo "ERROR: " . mysqli_error($conexion);
