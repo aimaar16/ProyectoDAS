@@ -30,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+// Fragmento de la pantalla principal que gestiona el perfil del usuario
 public class InicioFragment extends Fragment {
 
     private ImageView imgPerfil;
@@ -44,32 +45,38 @@ public class InicioFragment extends Fragment {
 
         imgPerfil = view.findViewById(R.id.imgPerfil);
 
-        // Cargar foto desde tu servidor
+        // Cargamos la foto actual del perfil desde el servidor
         cargarFotoDesdeServidor();
 
-        // Inicializar cámara
+        // Configuracion del lanzador para capturar el resultado de la camara
         takePictureLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
+                        // Obtenemos la miniatura de la foto y la mostramos
                         Bitmap foto = (Bitmap) result.getData().getExtras().get("data");
                         imgPerfil.setImageBitmap(foto);
 
+                        // Enviamos la nueva imagen al servidor
                         subirFotoPerfil(foto);
                     }
                 }
         );
 
+        // Al pulsar en la imagen se intenta abrir la camara para cambiar la foto
         imgPerfil.setOnClickListener(v -> verificarPermisosYAbrirCamara());
 
         return view;
     }
-    // Permisos para la cámara como en el Armario Fragment
+
+    // Gestiona la respuesta a la solicitud de permisos de la camara
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) abrirCamara();
                 else Toast.makeText(getContext(), "Permiso de cámara denegado", Toast.LENGTH_SHORT).show();
             });
+
+    // Comprueba si tenemos permiso para usar la camara antes de abrirla
     private void verificarPermisosYAbrirCamara() {
         if (requireContext().checkSelfPermission(android.Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -79,23 +86,24 @@ public class InicioFragment extends Fragment {
         }
     }
 
+    // Lanza el intent del sistema para capturar una foto
     private void abrirCamara() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         takePictureLauncher.launch(intent);
     }
 
+    // Convierte el bitmap a base64 y lo sube al servidor mediante Volley
     private void subirFotoPerfil(Bitmap bitmap) {
 
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
         String username = prefs.getString("username", null);
-
-        Log.d("FOTO", "Username enviado: " + username);
 
         if (username == null) {
             Toast.makeText(getContext(), "Error: username no encontrado", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Compresion de la imagen para el envio
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
         String imagenBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.DEFAULT);
@@ -104,6 +112,7 @@ public class InicioFragment extends Fragment {
 
         StringRequest request = new StringRequest(Request.Method.POST, url,
                 response -> {
+                    // Refrescamos la imagen evitando el cache de Glide
                     String urlSinCache = response + "?t=" + System.currentTimeMillis();
 
                     Glide.with(this)
@@ -113,6 +122,7 @@ public class InicioFragment extends Fragment {
                             .circleCrop()
                             .into(imgPerfil);
 
+                    // Guardamos la nueva ruta localmente
                     SharedPreferences prefsFoto = requireContext().getSharedPreferences("perfil", getContext().MODE_PRIVATE);
                     prefsFoto.edit().putString("url_foto_" + username, urlSinCache).apply();
 
@@ -132,7 +142,7 @@ public class InicioFragment extends Fragment {
         Volley.newRequestQueue(requireContext()).add(request);
     }
 
-
+    // Recupera la URL de la foto de perfil y la carga con Glide
     private void cargarFotoDesdeServidor() {
 
         SharedPreferences prefsUser = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
@@ -141,6 +151,7 @@ public class InicioFragment extends Fragment {
         SharedPreferences prefsFoto = requireContext().getSharedPreferences("perfil", getContext().MODE_PRIVATE);
         String url = prefsFoto.getString("url_foto_" + username, null);
 
+        // Si ya tenemos la URL guardada la cargamos directamente
         if (url != null) {
             Glide.with(this)
                     .load(url)
@@ -151,7 +162,7 @@ public class InicioFragment extends Fragment {
             return;
         }
 
-        // Si no hay foto guardada, pedirla al servidor
+        // Si no hay rastro de la foto, preguntamos al servidor
         StringRequest request = new StringRequest(Request.Method.POST,
                 "http://34.175.196.12:81/obtenerFotoPerfil.php",
                 response -> {
@@ -162,6 +173,7 @@ public class InicioFragment extends Fragment {
                                 .load(urlSinCache)
                                 .skipMemoryCache(true)
                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                .circleCrop()
                                 .into(imgPerfil);
 
                         prefsFoto.edit().putString("url_foto_" + username, response).apply();

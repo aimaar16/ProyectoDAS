@@ -26,13 +26,14 @@ import com.android.volley.toolbox.Volley;
 import java.util.HashMap;
 import java.util.Map;
 
+// Fragmento encargado de la autenticacion del usuario
 public class LoginFragment extends Fragment {
 
     private EditText Usuario, Contraseña;
     private Button btnLogin;
     private TextView tvGoToRegister;
 
-    // IP de mi servidor Google Cloud
+    // Ruta del script PHP en el servidor remoto
     private static final String URL_LOGIN = "http://34.175.196.12:81/login.php";
 
     @Nullable
@@ -45,8 +46,10 @@ public class LoginFragment extends Fragment {
         btnLogin = view.findViewById(R.id.btnLogin);
         tvGoToRegister = view.findViewById(R.id.tvGoToRegister);
 
+        // Click para intentar loguearse
         btnLogin.setOnClickListener(v -> loginUsuario());
 
+        // Click para ir a la pantalla de registro
         tvGoToRegister.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_login_to_registro)
         );
@@ -54,11 +57,13 @@ public class LoginFragment extends Fragment {
         return view;
     }
 
+    // Gestiona el proceso de login comprobando internet y credenciales
     private void loginUsuario() {
 
         String usuario = Usuario.getText().toString().trim();
         String password = Contraseña.getText().toString().trim();
 
+        // Validacion simple de campos vacios
         if (usuario.isEmpty() || password.isEmpty()) {
             Toast.makeText(getContext(), "Rellena todos los campos", Toast.LENGTH_SHORT).show();
             return;
@@ -67,9 +72,8 @@ public class LoginFragment extends Fragment {
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", getContext().MODE_PRIVATE);
         String usuarioGuardado = prefs.getString("username", null);
 
-        //1. Si NO hay internet intentar login offline
+        // Si no hay internet, permitimos acceso si el usuario ya habia entrado antes
         if (!hayInternet(getContext())) {
-
             if (usuarioGuardado != null && usuarioGuardado.equals(usuario)) {
                 Toast.makeText(getContext(), "Entrando en modo offline", Toast.LENGTH_SHORT).show();
                 Navigation.findNavController(requireView()).navigate(R.id.action_login_to_inicio);
@@ -80,18 +84,14 @@ public class LoginFragment extends Fragment {
             }
         }
 
-        // 2. Si hay internet → login normal
+        // Peticion al servidor para validar credenciales
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_LOGIN,
                 response -> {
-
                     if (response.trim().equalsIgnoreCase("OK")) {
-
-                        // Guardar usuario para futuros accesos offline
+                        // Guardamos el usuario localmente para el modo offline
                         prefs.edit().putString("username", usuario).apply();
-
                         Toast.makeText(getContext(), "Bienvenido " + usuario, Toast.LENGTH_SHORT).show();
                         Navigation.findNavController(requireView()).navigate(R.id.action_login_to_inicio);
-
                     } else {
                         Toast.makeText(getContext(), "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                     }
@@ -111,6 +111,7 @@ public class LoginFragment extends Fragment {
         requestQueue.add(stringRequest);
     }
 
+    // Comprueba si el dispositivo tiene conexion activa a internet
     public static boolean hayInternet(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();

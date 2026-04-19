@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+// Clase principal que gestiona la navegacion y los componentes globales
 public class MainActivity extends AppCompatActivity {
     private long tiempoClick = 0;
     private NavController navController;
@@ -50,30 +51,32 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Recuperamos la sesion del usuario
         SharedPreferences prefs = getSharedPreferences("usuario", MODE_PRIVATE);
         String nombreUsuario = prefs.getString("username", "");
 
-        // 1. Configuración de navegación inicial
+        // Configuramos el NavController para movernos entre fragmentos
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
             
-            // SI YA ESTÁ LOGUEADO, SALTAMOS EL LOGIN
+            // Si el usuario ya inicio sesion antes, saltamos la pantalla de login
             if (!nombreUsuario.isEmpty()) {
                 navController.navigate(R.id.fragment_inicio);
                 
-                // SI VENIMOS DEL WIDGET, VAMOS A FAVORITOS
+                // Si abrimos la app desde el widget, vamos directos a favoritos
                 if (getIntent().getBooleanExtra("desde_widget", false)) {
                     navController.navigate(R.id.fragment_favoritos);
                 }
             }
         }
 
-        // Resto de inicializaciones (FCM, Notificaciones, UI...)
+        // Inicializamos los componentes de la interfaz y servicios
         initUI();
         initFCM(nombreUsuario);
     }
 
+    // Inicializa la Toolbar, el Drawer y los eventos de navegacion
     private void initUI() {
         createNotificationChannel();
         pedirPermisos();
@@ -82,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.barra);
         setSupportActionBar(toolbar);
 
+        // Boton para abrir y cerrar el menu lateral
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, android.R.string.ok, android.R.string.cancel);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
@@ -90,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setItemIconTintList(null);
         NavigationUI.setupWithNavController(navigationView, navController);
         
+        // Listener para las opciones del menu lateral
         navigationView.setNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.fragment_login) {
                 cerrarSesion();
@@ -100,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        // Manejo del boton atras para cerrar el menu o salir de la app
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -115,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Registra el token de Firebase para notificaciones push
     private void initFCM(String nombreUsuario) {
         if (nombreUsuario.isEmpty()) return;
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token -> {
@@ -132,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Solicita los permisos necesarios de ubicacion y notificaciones
     private void pedirPermisos() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -143,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Crea el canal para las notificaciones locales de la app
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Outfit Notify", NotificationManager.IMPORTANCE_DEFAULT);
@@ -165,11 +174,13 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // Diálogo para seleccionar el idioma de la interfaz
     private void mostrarDialogoIdioma() {
         String[] idiomas = {getString(R.string.lang_es), getString(R.string.lang_en)};
         new AlertDialog.Builder(this).setTitle(R.string.change_language).setItems(idiomas, (d, w) -> cambiarIdioma(w == 0 ? "es" : "en")).show();
     }
 
+    // Aplica el cambio de idioma y reinicia la actividad
     private void cambiarIdioma(String codigoIdioma) {
         Locale locale = new Locale(codigoIdioma);
         Locale.setDefault(locale);
@@ -179,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
         recreate();
     }
 
+    // Limpia los datos de sesion y vuelve al login
     private void cerrarSesion() {
         getSharedPreferences("usuario", MODE_PRIVATE).edit().clear().apply();
         getSharedPreferences("perfil", MODE_PRIVATE).edit().clear().apply();

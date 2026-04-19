@@ -43,6 +43,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.util.HashMap;
 import java.util.Map;
 
+// Fragmento que gestiona el mapa y la geolocalizacion de usuarios
 public class MapaFragment extends Fragment {
 
     private MapView map;
@@ -52,6 +53,7 @@ public class MapaFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        // Configuramos osmdroid para el renderizado del mapa
         Context ctx = requireContext().getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
@@ -60,33 +62,33 @@ public class MapaFragment extends Fragment {
         map = view.findViewById(R.id.map);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
 
+        // Ajustes visuales y de control del mapa
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.ALWAYS);
         map.setMultiTouchControls(true);
 
+        // Capa para mostrar nuestra propia posicion en tiempo real
         MyLocationNewOverlay myLocationOverlay =
                 new MyLocationNewOverlay(new GpsMyLocationProvider(requireContext()), map);
         myLocationOverlay.enableMyLocation();
         myLocationOverlay.enableFollowLocation();
         map.getOverlays().add(myLocationOverlay);
 
-        // Zoom por defecto
         map.getController().setZoom(15.0);
 
-        // Listener para clics manuales
+        // Listener para capturar toques en el mapa y subir coordenadas manualmente
         MiMapaEventsReceiver mapEventsReceiver = new MiMapaEventsReceiver(ctx, map, this);
         MapEventsOverlay mapEventsOverlay = new MapEventsOverlay(mapEventsReceiver);
         map.getOverlays().add(mapEventsOverlay);
 
-        // 1. Forzar ubicación y subirla
+        // Al entrar, forzamos la subida de nuestra ubicacion y cargamos el resto
         solicitarUbicacionReal();
-
-        // 2. Cargar ubicaciones de otros
         cargarUbicaciones();
 
         return view;
     }
 
+    // Envia las coordenadas actuales al servidor remoto mediante Volley
     public void subirUbicacionAlServidor(double lat, double lon) {
         String username = getUsername();
         String url = "http://34.175.196.12:81/insertar_ubicaciones.php";
@@ -121,6 +123,7 @@ public class MapaFragment extends Fragment {
         Volley.newRequestQueue(requireContext()).add(request);
     }
 
+    // Pide la ubicacion actual al sensor GPS con alta precision
     private void solicitarUbicacionReal() {
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -137,6 +140,7 @@ public class MapaFragment extends Fragment {
                 });
     }
 
+    // Descarga y dibuja los marcadores de todos los usuarios en el mapa
     private void cargarUbicaciones() {
         String url = "http://34.175.196.12:81/obtener_ubicaciones.php";
         String miUsuario = getUsername();
@@ -145,6 +149,7 @@ public class MapaFragment extends Fragment {
                 response -> {
                     try {
                         JSONArray array = new JSONArray(response);
+                        // Limpiamos los marcadores de otros usuarios antes de repintar
                         map.getOverlays().removeIf(o -> o instanceof Marker);
 
                         for (int i = 0; i < array.length(); i++) {
@@ -153,6 +158,7 @@ public class MapaFragment extends Fragment {
                             double lon = obj.getDouble("lon");
                             String userRes = obj.getString("username");
 
+                            // Ponemos marcador solo si es otro usuario
                             if (!userRes.equalsIgnoreCase(miUsuario)) {
                                 Marker marker = new Marker(map);
                                 marker.setPosition(new GeoPoint(lat, lon));
@@ -171,6 +177,7 @@ public class MapaFragment extends Fragment {
         Volley.newRequestQueue(requireContext()).add(request);
     }
 
+    // Recupera el nombre de usuario de las preferencias compartidas
     public String getUsername() {
         SharedPreferences prefs = requireContext().getSharedPreferences("usuario", MODE_PRIVATE);
         String name = prefs.getString("username", "Anonimo");
