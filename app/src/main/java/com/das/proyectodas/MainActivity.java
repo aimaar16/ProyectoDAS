@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -38,144 +39,123 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-// Esta es la clase principal donde se carga menu y navegacion
 public class MainActivity extends AppCompatActivity {
-    private long tiempoClick = 0; // Para saber cuándo se pulsa para salir
+    private long tiempoClick = 0;
     private NavController navController;
-    public static final String CHANNEL_ID = "OUTFIT_NOTIFICATIONS"; // ID para las notificaciones
+    public static final String CHANNEL_ID = "OUTFIT_NOTIFICATIONS";
     private static final int PERMISSION_CODE = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         SharedPreferences prefs = getSharedPreferences("usuario", MODE_PRIVATE);
         String nombreUsuario = prefs.getString("username", "");
 
-
-        FirebaseMessaging.getInstance().getToken()
-                .addOnSuccessListener(token -> {
-                    Log.d("FCM", "Token: " + token);
-
-                    // Enviar token al servidor
-                    StringRequest request = new StringRequest(Request.Method.POST,
-                            "http://34.175.196.12:81/guardarToken.php",
-                            response -> Log.d("FCM", "Token guardado"),
-                            error -> Log.e("FCM", "Error guardando token"))
-                    {
-                        @Override
-                        protected Map<String, String> getParams() {
-                            Map<String, String> params = new HashMap<>();
-                            params.put("usuario", nombreUsuario);
-                            params.put("token", token);
-                            return params;
-                        }
-                    };
-
-                    Volley.newRequestQueue(this).add(request);
-                });
-
-
-        // Llamamos a la función para crear el canal de notificaciones
-        createNotificationChannel();
-
-        // Pedimos permiso para las notificaciones
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, PERMISSION_CODE);
+        // 1. Configuración de navegación inicial
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment != null) {
+            navController = navHostFragment.getNavController();
+            
+            // SI YA ESTÁ LOGUEADO, SALTAMOS EL LOGIN
+            if (!nombreUsuario.isEmpty()) {
+                navController.navigate(R.id.fragment_inicio);
+                
+                // SI VENIMOS DEL WIDGET, VAMOS A FAVORITOS
+                if (getIntent().getBooleanExtra("desde_widget", false)) {
+                    navController.navigate(R.id.fragment_favoritos);
+                }
             }
         }
-        // Permisos de ubicación
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    1001);
-        }
+        // Resto de inicializaciones (FCM, Notificaciones, UI...)
+        initUI();
+        initFCM(nombreUsuario);
+    }
 
-        // Configuramos la barra de arriba y el menú lateral
+    private void initUI() {
+        createNotificationChannel();
+        pedirPermisos();
+
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         Toolbar toolbar = findViewById(R.id.barra);
         setSupportActionBar(toolbar);
 
-        // Ponemos el botón de las tres rayas para abrir el menú
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this,
-                drawerLayout,
-                toolbar,
-                android.R.string.ok,
-                android.R.string.cancel);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, android.R.string.ok, android.R.string.cancel);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        // Configuramos el sistema de navegación por fragmentos
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-        if (navHostFragment != null) {
-            navController = navHostFragment.getNavController();
-            NavigationView navigationView = findViewById(R.id.nav_view);
-            navigationView.setItemIconTintList(null); // Para que los iconos se vean con sus colores
-            NavigationUI.setupWithNavController(navigationView, navController);
-            navigationView.setNavigationItemSelectedListener(item -> {
-                if (item.getItemId() == R.id.fragment_login) {
-                    cerrarSesion();
-                    DrawerLayout drawer = findViewById(R.id.drawer_layout);
-                    drawer.closeDrawers();
-                    return true;
-                }
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setItemIconTintList(null);
+        NavigationUI.setupWithNavController(navigationView, navController);
+        
+        navigationView.setNavigationItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.fragment_login) {
+                cerrarSesion();
+            } else {
+                NavigationUI.onNavDestinationSelected(item, navController);
+            }
+            drawerLayout.closeDrawers();
+            return true;
+        });
 
-                // Para los demás items, dejar que NavigationUI lo gestione
-                boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
-
-                DrawerLayout drawer = findViewById(R.id.drawer_layout);
-                drawer.closeDrawers();
-
-                return handled;
-            });
-        }
-
-        // Controlamos el botón de atrás del móvil
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                DrawerLayout elmenudesplegable = findViewById(R.id.drawer_layout);
-                // Si el menú está abierto, lo cerramos
-                if (elmenudesplegable.isDrawerOpen(GravityCompat.START)) {
-                    elmenudesplegable.closeDrawer(GravityCompat.START);
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else if (tiempoClick + 1500 > System.currentTimeMillis()) {
+                    finish();
                 } else {
-                    // Si pulsas dos veces rápido, sales de la app
-                    if (tiempoClick + 1500 > System.currentTimeMillis()) {
-                        finish();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Pulsa otra vez para salir", Toast.LENGTH_SHORT).show();
-                        tiempoClick = System.currentTimeMillis();
-                    }
+                    Toast.makeText(getApplicationContext(), "Pulsa otra vez para salir", Toast.LENGTH_SHORT).show();
+                    tiempoClick = System.currentTimeMillis();
                 }
             }
         });
     }
 
-    // Función para que Android nos deje enviar notificaciones
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "Notificaciones de Outfit";
-            String description = "Avisos al añadir ropa al outfit diario";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+    private void initFCM(String nombreUsuario) {
+        if (nombreUsuario.isEmpty()) return;
+        FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token -> {
+            StringRequest request = new StringRequest(Request.Method.POST, "http://34.175.196.12:81/guardarToken.php",
+                    r -> Log.d("FCM", "Token guardado"), e -> Log.e("FCM", "Error token")) {
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("usuario", nombreUsuario);
+                    params.put("token", token);
+                    return params;
+                }
+            };
+            Volley.newRequestQueue(this).add(request);
+        });
+    }
+
+    private void pedirPermisos() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, PERMISSION_CODE);
+            }
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1001);
         }
     }
 
-    // Cargamos el menú de la barra de arriba (el del idioma)
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Outfit Notify", NotificationManager.IMPORTANCE_DEFAULT);
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_toolbar, menu);
         return true;
     }
 
-    // Qué pasa cuando pulsas una opción del menú de arriba
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_language) {
@@ -185,36 +165,23 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Ventana para elegir si quieres la app en Español o Inglés
     private void mostrarDialogoIdioma() {
         String[] idiomas = {getString(R.string.lang_es), getString(R.string.lang_en)};
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.change_language)
-                .setItems(idiomas, (dialog, which) -> {
-                    if (which == 0) {
-                        cambiarIdioma("es");
-                    } else {
-                        cambiarIdioma("en");
-                    }
-                })
-                .show();
+        new AlertDialog.Builder(this).setTitle(R.string.change_language).setItems(idiomas, (d, w) -> cambiarIdioma(w == 0 ? "es" : "en")).show();
     }
 
-    // Aquí cambiamos el idioma y reiniciamos la pantalla para que cambien los textos
     private void cambiarIdioma(String codigoIdioma) {
         Locale locale = new Locale(codigoIdioma);
         Locale.setDefault(locale);
         Configuration config = new Configuration();
         config.setLocale(locale);
         getResources().updateConfiguration(config, getResources().getDisplayMetrics());
-        recreate(); // Recargamos la actividad
+        recreate();
     }
 
     private void cerrarSesion() {
         getSharedPreferences("usuario", MODE_PRIVATE).edit().clear().apply();
         getSharedPreferences("perfil", MODE_PRIVATE).edit().clear().apply();
-
         navController.navigate(R.id.fragment_login);
     }
-
 }

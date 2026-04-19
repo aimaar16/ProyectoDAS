@@ -39,18 +39,25 @@ public class WidgetFavoritaAleatoria extends AppWidgetProvider {
 
             views.setTextViewText(R.id.txtNombrePrenda, nombre);
 
+            // Al pulsar el widget → abrir la app y avisar que venimos del widget
             Intent intent = new Intent(context, MainActivity.class);
+            intent.putExtra("desde_widget", true); // <--- ESTO ES LA PISTA
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     context, 0, intent,
                     PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
             );
+            
+            // Hacemos que todo el widget sea clickable
             views.setOnClickPendingIntent(R.id.txtNombrePrenda, pendingIntent);
+            // También al layout principal (si tuviera ID) o al título
+            views.setOnClickPendingIntent(R.id.txtTitulo, pendingIntent);
 
             manager.updateAppWidget(widgetId, views);
         }).start();
     }
 
-    //Forzar actualizacion del widget
     public static void forzarActualizacion(Context context) {
         Intent intent = new Intent(context, WidgetFavoritaAleatoria.class);
         intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
